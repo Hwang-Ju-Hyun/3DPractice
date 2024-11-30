@@ -10,6 +10,7 @@ struct Model
 	glm::mat4x4 ComputeMatrix();
 
 	std::vector<glm::vec3> points;
+	std::vector<unsigned int> indicies;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec2> UV;
 
@@ -19,6 +20,7 @@ struct Model
 	std::vector<int> normalIndeces;
 	unsigned int VBO;
 	unsigned int VAO;
+	unsigned int EBO=-1;
 
 	void LoadModel();
 

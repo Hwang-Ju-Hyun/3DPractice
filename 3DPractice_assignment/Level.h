@@ -8,6 +8,7 @@ class Model;
 
 #include <vector>
 #include "program.h"
+#include <iostream>
 
 //Singleton level
 struct Level
@@ -24,6 +25,9 @@ public:
 	void RotateCamY(float angle);
 	void RotateCamX(float angle);
 	void RotateCamZ(float angle);
+public:
+	glm::vec3 GetCam()const { return cam.camUp; }
+	void printCamPos()const { std::cout << (int)cam.camPos.x<< "," << (int)cam.camPos.y << "," << (int)cam.camPos.z << std::endl; }
 private:
 	void Render(Model*);
 	Level();
@@ -61,5 +65,8 @@ private:
 
 	//shaders
 	cg::Program* shader;
+	
+public:
+	//void MoveCam(float deltaAlpha, float deltaBeta, float deltaRadius);
 };
 

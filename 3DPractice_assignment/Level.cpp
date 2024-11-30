@@ -59,7 +59,7 @@ int Level::Initialize()
 	cam.camTarget = parser.camTarget;
 	cam.camUp = parser.camUp;	
 	cam.camRight = glm::vec3(1,0,0);
-	cam.camFront = glm::vec3(0,0,1);
+	cam.camFront = glm::vec3(0,0,100);
 
 	//Shader program
 	ReloadShaderProgram();
@@ -187,18 +187,28 @@ void Level::ReloadShaderProgram()
 
 void Level::RotateCamY(float angle)
 {
-	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), cam.camUp) * glm::vec4(cam.camTarget - cam.camPos,1));
+	glm::vec3 camDirection = cam.camTarget - cam.camPos;
+	glm::vec3 rotateDir = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(angle), cam.camUp) * glm::vec4(camDirection, 1.0f));
+	cam.camPos = cam.camTarget - rotateDir;
+	
+	cam.camRight = glm::normalize(glm::cross(glm::normalize(cam.camTarget - cam.camPos), cam.camUp));
 }
 
 void Level::RotateCamX(float angle)
 {
-	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), cam.camRight) * glm::vec4(cam.camTarget - cam.camPos, 1));
+	glm::vec3 camDirection = cam.camTarget - cam.camPos;
+	glm::vec3 rotateDir = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(angle), cam.camRight) * glm::vec4(camDirection, 1.0f));
+	cam.camPos = cam.camTarget - rotateDir;
+
+	cam.camUp = glm::normalize(glm::cross(cam.camRight, glm::normalize(cam.camTarget - cam.camPos)));
 }
 
 void Level::RotateCamZ(float angle)
-{
-	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), cam.camFront) * glm::vec4(cam.camTarget - cam.camPos, 1));
+{	
+	cam.camPos.z -= angle;
 }
+
+
 
 void Level::Render(Model* obj)
 {
@@ -213,11 +223,21 @@ void Level::Render(Model* obj)
 	//Send view matrix to the shader
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
 
-	//draw
+	//draw	
+	if (obj->transf.name == "plane"||obj->transf.name=="cube")
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO ¹ÙÀÎµù
+		glDrawElements(4, obj->indicies.size(), GL_UNSIGNED_INT, 0);
+	}
+		
+	else
+		glDrawArrays(GL_TRIANGLES, 0, obj->points.size());		
+
 	glDrawArrays(GL_TRIANGLES, 0, obj->points.size());
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 	glBindVertexArray(0);
 }
+
 
 
 Level::Level(): window (nullptr), shader(nullptr)

@@ -113,9 +113,19 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		vertices.push_back(points[i].y);
 		vertices.push_back(points[i].z);
 		//normals
-		vertices.push_back(normals[i].x);
-		vertices.push_back(normals[i].y);
-		vertices.push_back(normals[i].z);
+		if (this->transf.name == "cube")
+		{
+			vertices.push_back(normals[i%6].x);
+			vertices.push_back(normals[i%6].y);
+			vertices.push_back(normals[i%6].z);
+		}
+		else
+		{
+			vertices.push_back(normals[i].x);
+			vertices.push_back(normals[i].y);
+			vertices.push_back(normals[i].z);
+		}
+		
 		//UV
 		vertices.push_back(UV[i].x);
 		vertices.push_back(UV[i].y);
@@ -129,6 +139,17 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * (sizeof(float)), &vertices[0], GL_STATIC_DRAW);
+
+
+
+	//My EBO
+	if (this->transf.name == "plane"||this->transf.name=="cube")
+	{
+		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indicies.size(), &indicies[0], GL_STATIC_DRAW);
+	}	
+
 
 	//Gen VAO
 	
@@ -160,20 +181,85 @@ Model::~Model()
 //TODO:
 void Model::CreateModelPlane()
 {
-	//TODO: Points
+	points = {
+		{-0.5f,0.5f,0.0f},			// 0 : ¿ÞÂÊ »ó´Ü 
+		{-0.5f,-0.5f,0.0f},			// 1 : ¿ÞÂÊ ÇÏ´Ü
+		{0.5f,-0.5f,0.f},			// 2 : ¿ìÃø ÇÏ´Ü		
+		{0.5f,0.5f,0.f}				// 3 : ¿ìÃø »ó´Ü
+	};
 
-	//TODO: UVs
-
-	//TODO: Normals
+	indicies = { 0,1,2,0,3,2 };
+			
+	UV = {
+		{0.0f, 1.0f},				// 0 : ¿ÞÂÊ »ó´Ü 
+		{0.0f, 0.0f},				// 1 : ¿ÞÂÊ ÇÏ´Ü
+		{1.0f, 0.0f},				// 2 : ¿ìÃø ÇÏ´Ü
+		{0.0f, 1.0f},				// 0 : ¿ÞÂÊ »ó´Ü
+		{1.0f, 0.0f},				// 2 : ¿ìÃø ÇÏ´Ü
+		{1.0f, 1.0f}				// 3 : ¿ìÃø »ó´Ü
+	};
+	
+	normals = {
+		{0.0f, 0.0f, 1.0f},
+		{0.0f, 0.0f, 1.0f}, 
+		{0.0f, 0.0f, 1.0f},
+		{0.0f, 0.0f, 1.0f}, 
+		{0.0f, 0.0f, 1.0f}, 
+		{0.0f, 0.0f, 1.0f}
+	};
 }
 
 void Model::CreateModelCube()
-{
+{	
  //TODO: Points
+	points = {
+		{-0.5f, 0.5f, -0.5f},	
+		{-0.5f, 0.5f, 0.5f },	
+		{0.5f, 0.5f, 0.5f }, 	
+		{0.5f, 0.5f, -0.5f },	
+		{-0.5f, -0.5f, -0.5f},	
+		{-0.5f, -0.5f, 0.5f},	
+		{0.5f, -0.5f, 0.5f},	
+		{0.5f, -0.5f, -0.5f }	
+	};
+	indicies = {
+		{0,1,2,
+		0,2,3,		//À­¸é
+
+		1,5,6,
+		1,6,2,		//¾Õ¸é
+
+		2,6,7,
+		2,7,3,		//¿ìÃø¸é
+
+		0,4,5,
+		0,5,1,		//ÁÂÃø¸é
+
+		5,4,6,
+		4,7,6,		//¾Æ·§¸é
+
+		0,7,4,		//µÞ¸é
+		0,3,7}
+	};
  
  //TODO: UVs
-
+	UV = {
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Top
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Front
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Right
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Left
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Bottom
+		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}  // Back
+	};
  //TODO: Normals
+	normals = {
+		{0.0f, 1.0f, 0.0f},			// À­¸é
+		{0.0f, 0.0f, 1.0f},			// ¾Õ¸é
+		{1.0f, 0.0f, 0.0f},			// ¿ìÃø¸é	
+		{-1.0f, 0.0f, 0.0f},		// ÁÂÃø¸é
+		{0.0f, -1.0f, 0.0f},		// ¾Æ·§¸é
+		{0.0f, 0.0f, -1.0f}			// µÞ¸é
+	};
 }
 
 void Model::CreateModelCone(int slices)
