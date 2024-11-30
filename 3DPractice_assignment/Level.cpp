@@ -75,8 +75,6 @@ int Level::Initialize()
 
 void Level::Run()
 {
-
-
 	glClearColor(1, 1, 1, 1);
 	// Main loop
 	while (!glfwWindowShouldClose(window)) 
@@ -224,7 +222,7 @@ void Level::Render(Model* obj)
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
 
 	//draw	
-	if (obj->transf.name == "plane"||obj->transf.name=="cube")
+	if (obj->transf.name == "plane"||obj->transf.name=="cube"||obj->transf.name=="cone"||obj->transf.name=="cylinder"||obj->transf.name=="sphere")
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO ¹ÙÀÎµù
 		glDrawElements(4, obj->indicies.size(), GL_UNSIGNED_INT, 0);

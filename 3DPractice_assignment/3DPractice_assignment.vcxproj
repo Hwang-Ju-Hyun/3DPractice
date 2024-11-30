@@ -37,6 +37,10 @@
     <ClInclude Include="models.h" />
     <ClInclude Include="program.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="data\shaders\frag.frag" />
+    <None Include="data\shaders\vert.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

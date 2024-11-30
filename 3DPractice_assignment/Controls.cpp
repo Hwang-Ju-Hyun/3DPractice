@@ -33,6 +33,16 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
         if (key == GLFW_KEY_E)
             Level::GetPtr()->RotateCamZ(-5.0f);
     }
+    static bool wireframeMode = false;
+
+    if (action == GLFW_PRESS && key == GLFW_KEY_1) 
+    {
+        wireframeMode = !wireframeMode;
+        glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
+    }
+   
+
+
     //TODO: ADD/DECRESE SLICES
     
     //TODO: TRIGGER WIREFRAME

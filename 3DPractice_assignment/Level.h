@@ -67,6 +67,6 @@ private:
 	cg::Program* shader;
 	
 public:
-	//void MoveCam(float deltaAlpha, float deltaBeta, float deltaRadius);
+	
 };
 
