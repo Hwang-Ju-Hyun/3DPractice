@@ -300,7 +300,6 @@ void Level::RenderNormal(Model* obj)
 		normalVertices.push_back(startPoint.x);
 		normalVertices.push_back(startPoint.y);
 		normalVertices.push_back(startPoint.z);
-
 		normalVertices.push_back(endPoint.x);
 		normalVertices.push_back(endPoint.y);
 		normalVertices.push_back(endPoint.z);
@@ -310,7 +309,7 @@ void Level::RenderNormal(Model* obj)
 	glBufferData(GL_ARRAY_BUFFER, normalVertices.size() * sizeof(GLfloat), normalVertices.data(), GL_STATIC_DRAW);
 
 	// 법선 벡터 그리기
-	glDrawArrays(GL_LINES, 0, normalVertices.size() / 3);  // 법선 벡터를 그리기 위해 2개의 점마다 하나의 선을 그림
+	glDrawArrays(GL_LINES, 0, 6);  // 법선 벡터를 그리기 위해 2개의 점마다 하나의 선을 그림
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);

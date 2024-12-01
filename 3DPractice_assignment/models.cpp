@@ -116,9 +116,9 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		//normals
 		if (this->transf.name == "cube")
 		{
-			vertices.push_back(normals[i%6].x);
-			vertices.push_back(normals[i%6].y);
-			vertices.push_back(normals[i%6].z);
+			vertices.push_back(normals[i].x);
+			vertices.push_back(normals[i].y);
+			vertices.push_back(normals[i].z);
 		}
 		else
 		{
@@ -141,7 +141,11 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * (sizeof(float)), &vertices[0], GL_STATIC_DRAW);
 
-
+	//Assign Coordinates
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
 	//My EBO
 	if (this->transf.name == "plane"||this->transf.name=="cube"|| this->transf.name == "cone"||this->transf.name=="cylinder"||this->transf.name=="sphere")
@@ -150,15 +154,8 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indicies.size(), &indicies[0], GL_STATIC_DRAW);
 	}	
-
-
-	//Gen VAO
 	
-	//Assign Coordinates
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+
 
 	//Assign Normals
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
@@ -217,14 +214,14 @@ void Model::CreateModelCube()
 {	
  //TODO: Points
 	points = {
-		{-0.5f, 0.5f, -0.5f},	//¿Þ À­ µÞ 
-		{-0.5f, 0.5f, 0.5f },	//¿Þ À­ ¾Õ 
-		{0.5f, 0.5f, 0.5f }, 	//¿À À­ ¾Õ
-		{0.5f, 0.5f, -0.5f },	//¿À À­ µÞ
-		{-0.5f, -0.5f, -0.5f},	//¿Þ ¹Ø µÞ
-		{-0.5f, -0.5f, 0.5f},	//¿Þ ¹Ø ¾Õ	
-		{0.5f, -0.5f, 0.5f},	//¿À ¹Ø ¾Õ
-		{0.5f, -0.5f, -0.5f }	//¿À ¹Ø µÞ
+		{-0.5f, 0.5f, -0.5f},	//¿Þ À­ µÞ		0
+		{-0.5f, 0.5f, 0.5f },	//¿Þ À­ ¾Õ		1
+		{0.5f, 0.5f, 0.5f }, 	//¿À À­ ¾Õ		2
+		{0.5f, 0.5f, -0.5f },	//¿À À­ µÞ		3
+		{-0.5f, -0.5f, -0.5f},	//¿Þ ¹Ø µÞ		4
+		{-0.5f, -0.5f, 0.5f},	//¿Þ ¹Ø ¾Õ		5
+		{0.5f, -0.5f, 0.5f},	//¿À ¹Ø ¾Õ		6
+		{0.5f, -0.5f, -0.5f }	//¿À ¹Ø µÞ		7
 	};
 	indicies = {
 		{0,1,2,
@@ -255,15 +252,6 @@ void Model::CreateModelCube()
 		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Bottom
 		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}  // Back
 	};
- //TODO: Normals
-	//normals = {
-	//	{0.0f, 1.0f, 0.0f},			// À­¸é
-	//	{0.0f, 0.0f, 1.0f},			// ¾Õ¸é
-	//	{1.0f, 0.0f, 0.0f},			// ¿ìÃø¸é	
-	//	{-1.0f, 0.0f, 0.0f},		// ÁÂÃø¸é
-	//	{0.0f, -1.0f, 0.0f},		// ¾Æ·§¸é
-	//	{0.0f, 0.0f, -1.0f}			// µÞ¸é
-	//};
 
 	normals = {
 		{0.0f, 1.0f, 0.0f},			// À­¸é
