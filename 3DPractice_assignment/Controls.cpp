@@ -1,5 +1,6 @@
 #include "Controls.h"
 #include "Level.h"
+#include "models.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -16,13 +17,13 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
             Level::GetPtr()->ReloadShaderProgram();
 
 
-    //TODO: ADD CAMERA CONTROLS 
+    
     glm::vec3 camUp = Level::GetPtr()->GetCam();
-    if (action == GLFW_PRESS|| action == GLFW_REPEAT)
-    {        
-        if (key == GLFW_KEY_W)        
-            Level::GetPtr()->RotateCamX(-5.0f);                    
-        if (key == GLFW_KEY_A)     
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    {
+        if (key == GLFW_KEY_W)
+            Level::GetPtr()->RotateCamX(-5.0f);
+        if (key == GLFW_KEY_A)
             Level::GetPtr()->RotateCamY(-5.0f);
         if (key == GLFW_KEY_D)
             Level::GetPtr()->RotateCamY(5.0f);
@@ -35,18 +36,54 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     }
     static bool wireframeMode = false;
 
-    if (action == GLFW_PRESS && key == GLFW_KEY_1) 
+    
+    if (action == GLFW_PRESS && key == GLFW_KEY_M)
     {
         wireframeMode = !wireframeMode;
         glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
     }
-   
-
-
-    //TODO: ADD/DECRESE SLICES
     
-    //TODO: TRIGGER WIREFRAME
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    {
+        if (key == GLFW_KEY_Z)
+        {
+            // 슬라이스 증가 및 업데이트
+            Model* cylinder = Level::GetPtr()->FindModel("cylinder");
+            Model* cone = Level::GetPtr()->FindModel("cone");
+
+            if (cylinder)
+            {
+                cylinder->slices++;
+                cylinder->UpdateSlices();
+            }
+            if (cone)
+            {
+                cone->slices++;
+                cone->UpdateSlices();
+            }
+        }
+        else if (key == GLFW_KEY_X)
+        {            
+            Model* cone = Level::GetPtr()->FindModel("cone");
+            Model* cylinder = Level::GetPtr()->FindModel("cylinder");
+
+            if (cylinder)
+            {
+                cylinder->slices--;
+                cylinder->UpdateSlices();
+            }
+            if (cone)
+            {
+                cone->slices--;
+                cone->UpdateSlices();
+            }
+        }
+    }
     //TODO: TRIGGER TEXTURE
     //TODO: TRIGGER NORMALS RENDER
+    if (action == GLFW_PRESS && key == GLFW_KEY_N)
+    {
+        
+    }
     //TODO: TRIGGER NORMALS AVERAGE
 }

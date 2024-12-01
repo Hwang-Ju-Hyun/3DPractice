@@ -208,6 +208,19 @@ void Level::RotateCamZ(float angle)
 
 
 
+Model* Level::FindModel(std::string _name)
+{
+	int size = allObjects.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (allObjects[i]->transf.name == _name)
+			return allObjects[i];
+	}
+	return nullptr;
+}
+
+bool showNormals = true;  // 법선 벡터를 보여줄지 여부를 결정하는 변수
+
 void Level::Render(Model* obj)
 {
 	//use obj VBO
@@ -221,18 +234,24 @@ void Level::Render(Model* obj)
 	//Send view matrix to the shader
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
 
-	//draw	
+	//draw		
+
 	if (obj->transf.name == "plane"||obj->transf.name=="cube"||obj->transf.name=="cone"||obj->transf.name=="cylinder"||obj->transf.name=="sphere")
 	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO 바인딩
-		glDrawElements(4, obj->indicies.size(), GL_UNSIGNED_INT, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO 바인딩				
+		if (showNormals&&obj->transf.name=="cube")
+			RenderNormal(obj);		
+		else
+			glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
 	}
-		
 	else
-		glDrawArrays(GL_TRIANGLES, 0, obj->points.size());		
+	{
+		glDrawArrays(GL_TRIANGLES, 0, obj->points.size());			
+	}
+	
 
-	glDrawArrays(GL_TRIANGLES, 0, obj->points.size());
 	glBindBuffer(GL_ARRAY_BUFFER,0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
@@ -249,4 +268,50 @@ Level::~Level()
 		delete m;
 
 	allObjects.clear();
+}
+
+
+
+void Level::RenderNormal(Model* obj)
+{	
+	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
+	glBindVertexArray(obj->VAO);
+
+	glm::mat4x4 m2w = obj->ComputeMatrix();
+	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
+
+	// 법선 벡터를 직선으로 그리기 위해서, 각 정점에 대해 법선 벡터를 추가로 그립니다.
+	// 기존의 정점으로부터 법선 벡터를 외부로 연장한 점을 계산하여 추가
+
+	// 이 예제에서는 법선 벡터를 큐브의 각 면의 중앙에서 바깥쪽으로 향하는 직선으로 그립니다.
+	// 법선 벡터는 각 정점에 대해 [정점 위치 + 법선 벡터]로 설정합니다.
+
+	// 법선 벡터를 직선으로 그리기 위해 두 개의 정점이 필요합니다.
+	std::vector<GLfloat> normalVertices;
+
+	for (size_t i = 0; i < obj->normals.size(); i++) {
+		glm::vec3 startPoint = obj->points[i];  // 정점
+		glm::vec3 normal = obj->normals[i];     // 법선 벡터
+
+		// 법선 벡터를 [정점 + 법선 벡터]로 계산
+		glm::vec3 endPoint = startPoint + normal * 0.1f;  // 법선 벡터 길이를 0.1로 설정
+
+		// 법선 벡터를 직선으로 그리기 위해 정점 배열에 추가
+		normalVertices.push_back(startPoint.x);
+		normalVertices.push_back(startPoint.y);
+		normalVertices.push_back(startPoint.z);
+
+		normalVertices.push_back(endPoint.x);
+		normalVertices.push_back(endPoint.y);
+		normalVertices.push_back(endPoint.z);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
+	glBufferData(GL_ARRAY_BUFFER, normalVertices.size() * sizeof(GLfloat), normalVertices.data(), GL_STATIC_DRAW);
+
+	// 법선 벡터 그리기
+	glDrawArrays(GL_LINES, 0, normalVertices.size() / 3);  // 법선 벡터를 그리기 위해 2개의 점마다 하나의 선을 그림
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }

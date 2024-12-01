@@ -9,10 +9,11 @@
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include "../extern/tiny_obj_loader.h"
 
-int Model::slices = 6;
+int Model::slices = 4;
+
 
 glm::mat4x4 Model::ComputeMatrix()
-{
+{	
 	glm::mat4 translate = glm::mat4(1.0f);
 	glm::mat4 scale = glm::mat4(1.0f);
 
@@ -168,6 +169,9 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
 
+
+
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
@@ -213,14 +217,14 @@ void Model::CreateModelCube()
 {	
  //TODO: Points
 	points = {
-		{-0.5f, 0.5f, -0.5f},	
-		{-0.5f, 0.5f, 0.5f },	
-		{0.5f, 0.5f, 0.5f }, 	
-		{0.5f, 0.5f, -0.5f },	
-		{-0.5f, -0.5f, -0.5f},	
-		{-0.5f, -0.5f, 0.5f},	
-		{0.5f, -0.5f, 0.5f},	
-		{0.5f, -0.5f, -0.5f }	
+		{-0.5f, 0.5f, -0.5f},	//왼 윗 뒷 
+		{-0.5f, 0.5f, 0.5f },	//왼 윗 앞 
+		{0.5f, 0.5f, 0.5f }, 	//오 윗 앞
+		{0.5f, 0.5f, -0.5f },	//오 윗 뒷
+		{-0.5f, -0.5f, -0.5f},	//왼 밑 뒷
+		{-0.5f, -0.5f, 0.5f},	//왼 밑 앞	
+		{0.5f, -0.5f, 0.5f},	//오 밑 앞
+		{0.5f, -0.5f, -0.5f }	//오 밑 뒷
 	};
 	indicies = {
 		{0,1,2,
@@ -252,6 +256,15 @@ void Model::CreateModelCube()
 		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}  // Back
 	};
  //TODO: Normals
+	//normals = {
+	//	{0.0f, 1.0f, 0.0f},			// 윗면
+	//	{0.0f, 0.0f, 1.0f},			// 앞면
+	//	{1.0f, 0.0f, 0.0f},			// 우측면	
+	//	{-1.0f, 0.0f, 0.0f},		// 좌측면
+	//	{0.0f, -1.0f, 0.0f},		// 아랫면
+	//	{0.0f, 0.0f, -1.0f}			// 뒷면
+	//};
+
 	normals = {
 		{0.0f, 1.0f, 0.0f},			// 윗면
 		{0.0f, 0.0f, 1.0f},			// 앞면
@@ -260,10 +273,40 @@ void Model::CreateModelCube()
 		{0.0f, -1.0f, 0.0f},		// 아랫면
 		{0.0f, 0.0f, -1.0f}			// 뒷면
 	};
+
+	 // 법선 벡터를 각 정점에 대해 계산하기 위한 벡터
+	std::vector<glm::vec3> vertexNormals(8, glm::vec3(0.0f));
+
+	// 면의 법선 벡터 계산
+	for (size_t i = 0; i < indicies.size(); i += 3) {
+		// 각 삼각형의 세 정점
+		glm::vec3 v0 = points[indicies[i]];
+		glm::vec3 v1 = points[indicies[i + 1]];
+		glm::vec3 v2 = points[indicies[i + 2]];
+
+		// 면의 법선 벡터 계산
+		glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+
+		// 해당 면에 속한 각 정점에 법선 벡터 추가
+		vertexNormals[indicies[i]] += normal;
+		vertexNormals[indicies[i + 1]] += normal;
+		vertexNormals[indicies[i + 2]] += normal;
+	}
+
+	// 각 정점의 법선 벡터 정규화
+	/*for (auto& normal : vertexNormals) {
+		normal = glm::normalize(normal);
+	}*/
+
+	// 법선 벡터를 모델의 normals 배열에 저장
+	normals = vertexNormals;
 }
 
 void Model::CreateModelCone(int slices)
-{				
+{		
+	points.clear();
+	normals.clear();
+	UV.clear();
 	float angle_triangle = 360.0f / slices;
 	
 	glm::vec3 topVertex = { 0.0f, 0.5f, 0.0f }; 
@@ -291,13 +334,15 @@ void Model::CreateModelCone(int slices)
 		indicies.push_back(0); 
 		indicies.push_back(i);
 		indicies.push_back(i + 1);
-	}	
+	}
+
 	indicies.push_back(0);
 	indicies.push_back(slices);
 	indicies.push_back(1);
 
 	
-	for (int i = 1; i < slices - 1; ++i) {
+	for (int i = 1; i < slices - 1; ++i) 
+	{
 		indicies.push_back(1);
 		indicies.push_back(i + 1);
 		indicies.push_back(i);
@@ -306,7 +351,9 @@ void Model::CreateModelCone(int slices)
 
 void Model::CreateModelCylinder(int slices)
 {
-	
+	points.clear();
+	normals.clear();
+	UV.clear();
 	float angle_slice = 360.f / slices; 
 
 	// 1. 윗면 , 아랫면
@@ -344,9 +391,9 @@ void Model::CreateModelCylinder(int slices)
 		normals.push_back(sideNormal); 
 		normals.push_back(sideNormal); 
 
-		float u = (i / float(slices));  // u 좌표는 0~1 사이로 균등 분배
-		UV.push_back(glm::vec2(u, 1.0f));  // 상단 원 텍스처 좌표
-		UV.push_back(glm::vec2(u, 0.0f));  // 하단 원 텍스처 좌표
+		float u = (i / float(slices));  
+		UV.push_back(glm::vec2(u, 1.0f));  
+		UV.push_back(glm::vec2(u, 0.0f));  
 	}
 
 	// 옆면 인덱스 
@@ -368,4 +415,149 @@ void Model::CreateModelCylinder(int slices)
 
 void Model::CreateModelSphere(int slices)
 {	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Model::UpdateSlices()
+{
+	if (transf.name == "cylinder")
+	{
+		GenerateCylinder(slices); 
+	}
+	else if (transf.name == "cone")
+	{
+		GenerateCone(slices);
+	}
+
+	// VAO 바인딩
+	glBindVertexArray(VAO);
+
+	// VBO 갱신
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), points.data(), GL_STATIC_DRAW);
+
+	// EBO 갱신
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(unsigned int), indicies.data(), GL_STATIC_DRAW);	
+}
+
+void Model::GenerateCylinder(int slices)
+{
+	points.clear();
+	indicies.clear();
+
+	float angle_slice = 360.f / slices;
+
+	// 1. 윗면 , 아랫면
+	for (int i = 0; i < slices; ++i) {
+		float angle = glm::radians(i * angle_slice);
+		float x = 0.5f * std::cos(angle);
+		float z = 0.5f * std::sin(angle);
+
+		points.push_back({ x,0.5f,z });
+		points.push_back({ x,-0.5f,z });
+
+
+		normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+		normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+
+
+		float u = (x + 0.5f) / 1.0f;
+		float v = (z + 0.5f) / 1.0f;
+		UV.push_back(glm::vec2{ u, v });
+		UV.push_back(glm::vec2{ u, v });
+	}
+
+	//옆면 법선벡터
+	for (int i = 0; i < slices; i++)
+	{
+		points;
+		float angle = glm::radians(i * angle_slice);
+		float x = 0.5f * cos(angle);
+		float z = 0.5f * sin(angle);
+
+
+		glm::vec3 sideNormal(x, 0.0f, z);
+		sideNormal = glm::normalize(sideNormal);
+
+		normals.push_back(sideNormal);
+		normals.push_back(sideNormal);
+
+		float u = (i / float(slices));
+		UV.push_back(glm::vec2(u, 1.0f));
+		UV.push_back(glm::vec2(u, 0.0f));
+	}
+
+	// 옆면 인덱스 
+	for (int i = 0; i < slices; i++)
+	{
+		int next = (i + 1) % slices;
+
+		// 첫 번째 삼각형 (상단-하단-상단)
+		indicies.push_back(i * 2);      // 상단 점
+		indicies.push_back(i * 2 + 1);  // 하단 점
+		indicies.push_back(next * 2);   // 다음 상단 점
+
+		// 두 번째 삼각형 (상단-하단-다음 하단)
+		indicies.push_back(next * 2);   // 다음 상단 점
+		indicies.push_back(i * 2 + 1);  // 하단 점
+		indicies.push_back(next * 2 + 1); // 다음 하단 점
+	}
+}
+
+void Model::GenerateCone(int slices)
+{
+	points.clear();
+	indicies.clear();
+
+	float angle_triangle = 360.0f / slices;
+
+	glm::vec3 topVertex = { 0.0f, 0.5f, 0.0f };
+	points.push_back(topVertex);
+	normals.push_back(glm::vec3{ 0.0f, 1.0f, 0.0f });
+	UV.push_back(glm::vec2(0.5f, 1.0f));
+
+	for (int i = 0; i < slices; i++)
+	{
+		float angle = glm::radians(i * angle_triangle);
+		float x = 0.5f * std::cos(angle);
+		float z = 0.5f * std::sin(angle);
+		points.push_back({ x,-0.5f,z });
+		normals.push_back(glm::vec3{ 0.0f, -1.0f, 0.0f });
+
+		// UV mapping for the base
+		float u = (x + 0.5f) / 1.0f;  // Convert x to the [0,1] range
+		float v = (z + 0.5f) / 1.0f;  // Convert z to the [0,1] range
+		UV.push_back(glm::vec2(u, v));
+	}
+
+
+	for (int i = 1; i < slices; ++i)
+	{
+		indicies.push_back(0);
+		indicies.push_back(i);
+		indicies.push_back(i + 1);
+	}
+
+	indicies.push_back(0);
+	indicies.push_back(slices);
+	indicies.push_back(1);
+
+
+	for (int i = 1; i < slices - 1; ++i) {
+		indicies.push_back(1);
+		indicies.push_back(i + 1);
+		indicies.push_back(i);
+	}
 }

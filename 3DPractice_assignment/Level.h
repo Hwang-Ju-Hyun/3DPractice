@@ -28,6 +28,7 @@ public:
 public:
 	glm::vec3 GetCam()const { return cam.camUp; }
 	void printCamPos()const { std::cout << (int)cam.camPos.x<< "," << (int)cam.camPos.y << "," << (int)cam.camPos.z << std::endl; }
+	Model* FindModel(std::string _name);
 private:
 	void Render(Model*);
 	Level();
@@ -64,9 +65,8 @@ private:
 	Camera cam;
 
 	//shaders
-	cg::Program* shader;
-	
+	cg::Program* shader;	
 public:
-	
+	void RenderNormal(Model* obj);
 };
 

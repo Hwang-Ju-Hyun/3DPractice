@@ -29,12 +29,22 @@ struct Model
 	
 	static int slices;
 
-private:
+public:
 	//TODO
 	void CreateModelPlane();
 	void CreateModelCube();
 	void CreateModelCone(int slices);
 	void CreateModelCylinder(int slices);
 	void CreateModelSphere(int slices);
-
+public:
+	void UpdateSlices();
+	void GenerateCylinder(int slices);
+	void GenerateCone(int slices);
+public:
+	glm::vec3 calculateNormal(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3) 
+	{
+		glm::vec3 v1 = p2 - p1;
+		glm::vec3 v2 = p3 - p1;
+		return glm::normalize(glm::cross(v1, v2));  // 외적을 계산하여 법선 벡터를 얻음
+	}
 };
