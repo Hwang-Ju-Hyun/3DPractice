@@ -9,7 +9,7 @@
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include "../extern/tiny_obj_loader.h"
 
-int Model::slices = 4;
+int Model::slices = 100;
 
 
 glm::mat4x4 Model::ComputeMatrix()
@@ -105,6 +105,8 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	//load points
 	LoadModel();
 	
+	Loadcheckboard();
+
 	int s = points.size();	
 	int n = normals.size();
 	//vertices
@@ -152,7 +154,7 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * (sizeof(float)), &vertices[0], GL_STATIC_DRAW);
 
 	//Gen normalVBO
-	if (transf.name == "cube")
+	if (transf.name == "cube"|| transf.name == "plane")
 	{
 		glGenBuffers(1, &normal_VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
@@ -281,15 +283,16 @@ void Model::CreateModelCube()
 	//TODO: UVs
 	   //00 10 11
 	   //00 11 01
-	for (int i = 0; i < indicies.size()/6; i++)
-	{
-		UV.push_back({ 0,0 });
-		UV.push_back({ 1,0 });
-		UV.push_back({ 1,1 });
+	for (size_t i = 0; i < indicies.size(); i += 3) 
+	{		
+		int idx1 = indicies[i];
+		int idx2 = indicies[i + 1];
+		int idx3 = indicies[i + 2];
 
-		UV.push_back({ 0,0 });
-		UV.push_back({ 1,1 });
-		UV.push_back({ 0,1 });
+	
+		UV.push_back({ (points[idx1].x + 0.5f), (points[idx1].y + 0.5f) });
+		UV.push_back({ (points[idx2].x + 0.5f), (points[idx2].y + 0.5f) });
+		UV.push_back({ (points[idx3].x + 0.5f), (points[idx3].y + 0.5f) });
 	}
 
 	normals = {

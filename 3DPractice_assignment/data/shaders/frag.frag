@@ -1,16 +1,14 @@
 #version 400
 
 out vec4 FragColor;
-out vec4 normalColor;
-
-uniform sampler2D ourTexture;
-
-in vec4 color;
 in vec2 UV;
-in vec3 Normal;
-in vec2 TexCoord;
+uniform sampler2D myTextureSampler;
+uniform bool hasTexture;
 
 void main()
-{                                           
-    FragColor = texture(ourTexture,TexCoord);
-}                                           
+{   
+	if(hasTexture)
+		FragColor = texture(myTextureSampler, UV);
+	else
+		FragColor = vec4(UV,0.0, 1.0);
+}

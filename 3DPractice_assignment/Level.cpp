@@ -183,11 +183,7 @@ void Level::ReloadShaderProgram()
 
 void Level::RotateCamY(float angle)
 {
-	glm::vec3 camDirection = cam.camTarget - cam.camPos;
-	glm::vec3 rotateDir = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(angle), cam.camUp) * glm::vec4(camDirection, 1.0f));
-	cam.camPos = cam.camTarget - rotateDir;
-	
-	cam.camRight = glm::normalize(glm::cross(glm::normalize(cam.camTarget - cam.camPos), cam.camUp));
+	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), cam.camUp) * glm::vec4(cam.camTarget - cam.camPos, 1));
 }
 
 void Level::RotateCamX(float angle)
@@ -221,7 +217,7 @@ bool showNormals = true;
 
 void Level::Render(Model* obj)
 {
-	if (showNormals && obj->transf.name == "cube")
+	if(render_normal)
 		RenderNormal(obj);
 
 	//use obj VBO
@@ -236,9 +232,9 @@ void Level::Render(Model* obj)
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);	
 
 	glBindTexture(GL_TEXTURE_2D, obj->textureID);
-	shader->setUniform("myTextureSampler", 0);
+	shader->setUniform("myTextureSampler", 0);	
+	shader->setUniform("hasTexture", b_tex);
 	//draw		
-
 	if (obj->transf.name == "plane" ||obj->transf.name=="cube"|| obj->transf.name == "cone" || obj->transf.name == "cylinder" || obj->transf.name == "sphere")
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);

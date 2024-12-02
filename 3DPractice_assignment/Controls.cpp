@@ -79,10 +79,14 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
         }
     }
     //TODO: TRIGGER TEXTURE
+    if (action == GLFW_PRESS && key == GLFW_KEY_T)
+    {
+        Level::GetPtr()->b_tex = !(Level::GetPtr()->b_tex);
+    }
     //TODO: TRIGGER NORMALS RENDER
     if (action == GLFW_PRESS && key == GLFW_KEY_N)
-    {
-        
+    {        
+        Level::GetPtr()->render_normal = !(Level::GetPtr()->render_normal);
     }
     //TODO: TRIGGER NORMALS AVERAGE
 }
