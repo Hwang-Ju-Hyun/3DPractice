@@ -105,7 +105,8 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	//load points
 	LoadModel();
 	
-	int s = points.size();
+	int s = points.size();	
+	int n = normals.size();
 	//vertices
 	for (int i = 0; i < s; i++)
 	{
@@ -113,24 +114,33 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		vertices.push_back(points[i].x);
 		vertices.push_back(points[i].y);
 		vertices.push_back(points[i].z);
-		//normals
-		if (this->transf.name == "cube")
-		{
-			vertices.push_back(normals[i].x);
-			vertices.push_back(normals[i].y);
-			vertices.push_back(normals[i].z);
-		}
-		else
-		{
-			vertices.push_back(normals[i].x);
-			vertices.push_back(normals[i].y);
-			vertices.push_back(normals[i].z);
-		}
 		
+		//normals		
+		vertices.push_back(normals[i].x);
+		vertices.push_back(normals[i].y);
+		vertices.push_back(normals[i].z);				
+
 		//UV
 		vertices.push_back(UV[i].x);
 		vertices.push_back(UV[i].y);
+	}	
+
+	//normal vector
+	if (transf.name == "cube")
+	{
+		for (int i = 0; i < normals.size(); i++)
+		{
+			glm::vec3 start = points[i];
+			glm::vec3 normal = normals[i];
+
+			glm::vec3 end = start + normal;
+
+			normal_vertices.push_back(start);			
+			normal_vertices.push_back(end);			
+		}
 	}
+	
+
 
 	//Sanity Check
 	if (vertices.size() == 0)
@@ -141,14 +151,38 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * (sizeof(float)), &vertices[0], GL_STATIC_DRAW);
 
-	//Assign Coordinates
+	//Gen normalVBO
+	if (transf.name == "cube")
+	{
+		glGenBuffers(1, &normal_VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
+		glBufferData(GL_ARRAY_BUFFER, normal_vertices.size() * (sizeof(float)*3), normal_vertices.data(), GL_STATIC_DRAW);
+	}
+	
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//Assign Coordinates	
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+
+
+	//normal vao
+	if (transf.name == "cube")
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
+		glGenVertexArrays(1, &normal_VAO);
+		glBindVertexArray(normal_VAO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}	
+
+
+
+
 	//My EBO
-	if (this->transf.name == "plane"||this->transf.name=="cube"|| this->transf.name == "cone"||this->transf.name=="cylinder"||this->transf.name=="sphere")
+	if (this->transf.name == "plane"||this->transf.name=="cube"|| this->transf.name == "cone" || this->transf.name == "cylinder" || this->transf.name == "sphere")
 	{
 		glGenBuffers(1, &EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -156,7 +190,7 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	}	
 	
 
-
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//Assign Normals
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(1);
@@ -207,12 +241,13 @@ void Model::CreateModelPlane()
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}
-	};
+	};		
+
 }
 
 void Model::CreateModelCube()
-{	
- //TODO: Points
+{
+	//TODO: Points
 	points = {
 		{-0.5f, 0.5f, -0.5f},	//¿Þ À­ µÞ		0
 		{-0.5f, 0.5f, 0.5f },	//¿Þ À­ ¾Õ		1
@@ -242,16 +277,20 @@ void Model::CreateModelCube()
 		0,7,4,		//µÞ¸é
 		0,3,7}
 	};
- 
- //TODO: UVs
-	UV = {
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Top
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Front
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Right
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Left
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, // Bottom
-		{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}  // Back
-	};
+
+	//TODO: UVs
+	   //00 10 11
+	   //00 11 01
+	for (int i = 0; i < indicies.size()/6; i++)
+	{
+		UV.push_back({ 0,0 });
+		UV.push_back({ 1,0 });
+		UV.push_back({ 1,1 });
+
+		UV.push_back({ 0,0 });
+		UV.push_back({ 1,1 });
+		UV.push_back({ 0,1 });
+	}
 
 	normals = {
 		{0.0f, 1.0f, 0.0f},			// À­¸é
@@ -261,33 +300,27 @@ void Model::CreateModelCube()
 		{0.0f, -1.0f, 0.0f},		// ¾Æ·§¸é
 		{0.0f, 0.0f, -1.0f}			// µÞ¸é
 	};
+	 
+	std::vector<glm::vec3> tempvertex(8, glm::vec3{ 0.0f });
+	
+	for (int i = 0; i < indicies.size(); i += 3) {
 
-	 // ¹ý¼± º¤ÅÍ¸¦ °¢ Á¤Á¡¿¡ ´ëÇØ °è»êÇÏ±â À§ÇÑ º¤ÅÍ
-	std::vector<glm::vec3> vertexNormals(8, glm::vec3(0.0f));
-
-	// ¸éÀÇ ¹ý¼± º¤ÅÍ °è»ê
-	for (size_t i = 0; i < indicies.size(); i += 3) {
-		// °¢ »ï°¢ÇüÀÇ ¼¼ Á¤Á¡
 		glm::vec3 v0 = points[indicies[i]];
 		glm::vec3 v1 = points[indicies[i + 1]];
 		glm::vec3 v2 = points[indicies[i + 2]];
-
-		// ¸éÀÇ ¹ý¼± º¤ÅÍ °è»ê
+		
 		glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
-		// ÇØ´ç ¸é¿¡ ¼ÓÇÑ °¢ Á¤Á¡¿¡ ¹ý¼± º¤ÅÍ Ãß°¡
-		vertexNormals[indicies[i]] += normal;
-		vertexNormals[indicies[i + 1]] += normal;
-		vertexNormals[indicies[i + 2]] += normal;
+		tempvertex[indicies[i]] += normal;
+		tempvertex[indicies[i + 1]] += normal;
+		tempvertex[indicies[i + 2]] += normal;
 	}
 
-	// °¢ Á¤Á¡ÀÇ ¹ý¼± º¤ÅÍ Á¤±ÔÈ­
-	/*for (auto& normal : vertexNormals) {
-		normal = glm::normalize(normal);
-	}*/
-
-	// ¹ý¼± º¤ÅÍ¸¦ ¸ðµ¨ÀÇ normals ¹è¿­¿¡ ÀúÀå
-	normals = vertexNormals;
+	normals = tempvertex;	
+	for (int i = 0; i < normals.size(); i++)
+	{
+		normals[i] = glm::normalize(normals[i]);
+	}
 }
 
 void Model::CreateModelCone(int slices)
@@ -297,10 +330,10 @@ void Model::CreateModelCone(int slices)
 	UV.clear();
 	float angle_triangle = 360.0f / slices;
 	
-	glm::vec3 topVertex = { 0.0f, 0.5f, 0.0f }; 
-	points.push_back(topVertex);
-	normals.push_back(glm::vec3{ 0.0f, 1.0f, 0.0f });
-	UV.push_back(glm::vec2(0.5f, 1.0f));  
+	glm::vec3 top = { 0.0f, 0.5f, 0.0f }; 
+	points.push_back(top);
+	normals.push_back({0.0f, 1.0f, 0.0f });
+	UV.push_back({ 0.5f, 1.0f });
 	      
 	for (int i = 0; i < slices; i++) 
 	{
@@ -308,12 +341,10 @@ void Model::CreateModelCone(int slices)
 		float x = 0.5f * std::cos(angle);  
 		float z = 0.5f * std::sin(angle);		 
 		points.push_back({x,-0.5f,z});
-		normals.push_back(glm::vec3{ 0.0f, -1.0f, 0.0f });
+		normals.push_back({ 0.0f, -1.0f, 0.0f });
 
-		// UV mapping for the base
-		float u = (x + 0.5f) / 1.0f;  // Convert x to the [0,1] range
-		float v = (z + 0.5f) / 1.0f;  // Convert z to the [0,1] range
-		UV.push_back(glm::vec2(u, v));
+		//TODO: UVÁÂÇ¥ ¼öÁ¤ÇØ¾ßµÊ
+		UV.push_back({ 0.f,0.f });
 	}
 
 	
@@ -335,6 +366,25 @@ void Model::CreateModelCone(int slices)
 		indicies.push_back(i + 1);
 		indicies.push_back(i);
 	}
+
+	//std::vector<glm::vec3> tempvertex(normals.size(), glm::vec3(0.0f));
+
+	//for (size_t i = 0; i < indicies.size(); i += 3) {
+
+	//	glm::vec3 v0 = points[indicies[i]];
+	//	glm::vec3 v1 = points[indicies[i + 1]];
+	//	glm::vec3 v2 = points[indicies[i + 2]];
+
+	//	glm::vec3 normal = glm::cross(v1 - v0, v2 - v0);
+
+	//	tempvertex[indicies[i]] += normal;
+	//	tempvertex[indicies[i + 1]] += normal;
+	//	tempvertex[indicies[i + 2]] += normal;
+	//}
+
+	//normals = tempvertex;
+
+
 }
 
 void Model::CreateModelCylinder(int slices)
@@ -354,14 +404,9 @@ void Model::CreateModelCylinder(int slices)
 		points.push_back({x,-0.5f,z});
 
 		
-		normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));		
-		normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+		normals.push_back({ 0.0f, 1.0f, 0.0f });
+		normals.push_back({ 0.0f, -1.0f, 0.0f });
 
-
-		float u = (x + 0.5f) / 1.0f;   
-		float v = (z + 0.5f) / 1.0f;   
-		UV.push_back(glm::vec2{u, v}); 
-		UV.push_back(glm::vec2{u, v}); 
 	}
 
 	//¿·¸é ¹ý¼±º¤ÅÍ
@@ -373,15 +418,14 @@ void Model::CreateModelCylinder(int slices)
 		float z = 0.5f * sin(angle);
 
 		
-		glm::vec3 sideNormal(x, 0.0f, z);
-		sideNormal = glm::normalize(sideNormal); 
+		glm::vec3 side_normal_vertex = { x, 0.0f, z };
+		side_normal_vertex = glm::normalize(side_normal_vertex); 
 		
-		normals.push_back(sideNormal); 
-		normals.push_back(sideNormal); 
+		normals.push_back(side_normal_vertex); 		
 
-		float u = (i / float(slices));  
-		UV.push_back(glm::vec2(u, 1.0f));  
-		UV.push_back(glm::vec2(u, 0.0f));  
+		
+		UV.push_back({0.f, 1.0f});  
+		UV.push_back({0.f, 0.0f });
 	}
 
 	// ¿·¸é ÀÎµ¦½º 
@@ -399,6 +443,25 @@ void Model::CreateModelCylinder(int slices)
 		indicies.push_back(i * 2 + 1);  // ÇÏ´Ü Á¡
 		indicies.push_back(next * 2 + 1); // ´ÙÀ½ ÇÏ´Ü Á¡
 	}
+
+
+	std::vector<glm::vec3> tempvertex(points.size(), glm::vec3{ 0.0f });
+
+	for (size_t i = 0; i < indicies.size(); i += 3) {
+
+		glm::vec3 v0 = points[indicies[i]];
+		glm::vec3 v1 = points[indicies[i + 1]];
+		glm::vec3 v2 = points[indicies[i + 2]];
+
+		glm::vec3 normal = glm::cross(v1 - v0, v2 - v0);
+		
+		tempvertex[indicies[i]] += normal;
+		tempvertex[indicies[i + 1]] += normal;
+		tempvertex[indicies[i + 2]] += normal;
+	}
+
+	normals = tempvertex;
+
 }
 
 void Model::CreateModelSphere(int slices)
@@ -421,11 +484,11 @@ void Model::UpdateSlices()
 {
 	if (transf.name == "cylinder")
 	{
-		GenerateCylinder(slices); 
+		MyCylinder(slices); 
 	}
 	else if (transf.name == "cone")
 	{
-		GenerateCone(slices);
+		MyCone(slices);
 	}
 
 	// VAO ¹ÙÀÎµù
@@ -440,7 +503,7 @@ void Model::UpdateSlices()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(unsigned int), indicies.data(), GL_STATIC_DRAW);	
 }
 
-void Model::GenerateCylinder(int slices)
+void Model::MyCylinder(int slices)
 {
 	points.clear();
 	indicies.clear();
@@ -448,7 +511,8 @@ void Model::GenerateCylinder(int slices)
 	float angle_slice = 360.f / slices;
 
 	// 1. À­¸é , ¾Æ·§¸é
-	for (int i = 0; i < slices; ++i) {
+	for (int i = 0; i < slices; i++) 
+	{
 		float angle = glm::radians(i * angle_slice);
 		float x = 0.5f * std::cos(angle);
 		float z = 0.5f * std::sin(angle);
@@ -457,14 +521,12 @@ void Model::GenerateCylinder(int slices)
 		points.push_back({ x,-0.5f,z });
 
 
-		normals.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
-		normals.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
+		normals.push_back({0.0f, 1.0f, 0.0f});
+		normals.push_back({ 0.0f, -1.0f, 0.0f });
 
-
-		float u = (x + 0.5f) / 1.0f;
-		float v = (z + 0.5f) / 1.0f;
-		UV.push_back(glm::vec2{ u, v });
-		UV.push_back(glm::vec2{ u, v });
+		
+		UV.push_back({ 0.f,1.f });
+		UV.push_back({ 0.f,1.f });
 	}
 
 	//¿·¸é ¹ý¼±º¤ÅÍ
@@ -476,15 +538,13 @@ void Model::GenerateCylinder(int slices)
 		float z = 0.5f * sin(angle);
 
 
-		glm::vec3 sideNormal(x, 0.0f, z);
-		sideNormal = glm::normalize(sideNormal);
-
-		normals.push_back(sideNormal);
-		normals.push_back(sideNormal);
-
-		float u = (i / float(slices));
-		UV.push_back(glm::vec2(u, 1.0f));
-		UV.push_back(glm::vec2(u, 0.0f));
+		glm::vec3 side_normal = { x, 0.f, z };
+		side_normal = glm::normalize(side_normal);
+		
+		normals.push_back(side_normal);
+		
+		UV.push_back({0.f, 1.0f });
+		UV.push_back({0.f, 0.f});
 	}
 
 	// ¿·¸é ÀÎµ¦½º 
@@ -504,17 +564,17 @@ void Model::GenerateCylinder(int slices)
 	}
 }
 
-void Model::GenerateCone(int slices)
+void Model::MyCone(int slices)
 {
 	points.clear();
 	indicies.clear();
 
-	float angle_triangle = 360.0f / slices;
+	float angle_triangle = 360.f / slices;
 
-	glm::vec3 topVertex = { 0.0f, 0.5f, 0.0f };
+	glm::vec3 topVertex = { 0.f, 0.5f, 0.f };
 	points.push_back(topVertex);
-	normals.push_back(glm::vec3{ 0.0f, 1.0f, 0.0f });
-	UV.push_back(glm::vec2(0.5f, 1.0f));
+	normals.push_back({ 0.f, 1.f, 0.f });
+	UV.push_back({ 0.5f, 1.f });
 
 	for (int i = 0; i < slices; i++)
 	{
@@ -522,16 +582,13 @@ void Model::GenerateCone(int slices)
 		float x = 0.5f * std::cos(angle);
 		float z = 0.5f * std::sin(angle);
 		points.push_back({ x,-0.5f,z });
-		normals.push_back(glm::vec3{ 0.0f, -1.0f, 0.0f });
-
-		// UV mapping for the base
-		float u = (x + 0.5f) / 1.0f;  // Convert x to the [0,1] range
-		float v = (z + 0.5f) / 1.0f;  // Convert z to the [0,1] range
-		UV.push_back(glm::vec2(u, v));
+		normals.push_back({0.f, -1.f, 0.f});
+				
+		UV.push_back({ 0.f, 1.f });
 	}
 
 
-	for (int i = 1; i < slices; ++i)
+	for (int i = 1; i < slices; i++)
 	{
 		indicies.push_back(0);
 		indicies.push_back(i);
@@ -543,9 +600,55 @@ void Model::GenerateCone(int slices)
 	indicies.push_back(1);
 
 
-	for (int i = 1; i < slices - 1; ++i) {
+	for (int i = 1; i < slices - 1; i++) 
+	{
 		indicies.push_back(1);
 		indicies.push_back(i + 1);
 		indicies.push_back(i);
 	}
+}
+
+void Model::Loadcheckboard()
+{
+	const int width = 6;
+	const int height = 6;
+
+	glm::vec3 colors[] =
+	{
+		glm::vec3(0, 0, 1),   // Blue
+		glm::vec3(0, 1, 1),   // Cyan
+		glm::vec3(0, 1, 0),   // Green
+		glm::vec3(1, 1, 0),   // Yellow
+		glm::vec3(1, 0, 0),   // Red
+		glm::vec3(1, 0, 1)    // Purple
+	};
+
+	unsigned char* data = new unsigned char[width * height * 3 * 36];
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			int colorIdx = (x + (height - 1 - y)) % 6;
+			for (int py = 0; py < 6; py++)
+			{  // ¼¼·Î ¹Ýº¹
+				for (int px = 0; px < 6; px++)
+				{  // °¡·Î ¹Ýº¹
+					int idx = ((y * 6 + py) * width * 6 + (x * 6 + px)) * 3;
+					data[idx] = colors[colorIdx].r * 255;
+					data[idx + 1] = colors[colorIdx].g * 255;
+					data[idx + 2] = colors[colorIdx].b * 255;
+				}
+			}
+		}
+	}
+	//Texture »ý¼º
+	glGenTextures(1, &textureID);
+	//TextureID¿¡ ¹ÙÀÎµù
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	//TextureData »ðÀÔ
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width * 6, height * 6, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+	//Data »ðÀÔ glTexParameteri
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }

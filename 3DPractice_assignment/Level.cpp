@@ -75,7 +75,7 @@ int Level::Initialize()
 
 void Level::Run()
 {
-	glClearColor(1, 1, 1, 1);
+	glClearColor(0, 0, 0, 0);
 	// Main loop
 	while (!glfwWindowShouldClose(window)) 
 	{
@@ -92,7 +92,6 @@ void Level::Run()
 		glm::mat4 V = glm::mat4(1);
 		glm::vec3 up = glm::normalize(glm::cross(dir, r));
 
-
 		V[0][0] = r.x;
 		V[1][0] = r.y;
 		V[2][0] = r.z;
@@ -105,7 +104,6 @@ void Level::Run()
 		V[3][0] = -dot(r,cam.camPos );
 		V[3][1] = -dot(up, cam.camPos);
 		V[3][2] = -dot(dir, cam.camPos);
-
 
 		//cam.ViewMat = glm::lookAt(cam.camPos, cam.camTarget, up);
 		cam.ViewMat = V;
@@ -164,7 +162,7 @@ void Level::ReloadShaderProgram()
 
 	if (shader)
 		delete shader;
-
+	
 	std::stringstream v;
 	std::stringstream f;
 
@@ -219,10 +217,13 @@ Model* Level::FindModel(std::string _name)
 	return nullptr;
 }
 
-bool showNormals = true;  // 법선 벡터를 보여줄지 여부를 결정하는 변수
+bool showNormals = true;
 
 void Level::Render(Model* obj)
 {
+	if (showNormals && obj->transf.name == "cube")
+		RenderNormal(obj);
+
 	//use obj VBO
 	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
 	//use obj VAO
@@ -232,32 +233,35 @@ void Level::Render(Model* obj)
 	glm::mat4x4 m2w = obj->ComputeMatrix();
 
 	//Send view matrix to the shader
-	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
+	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);	
 
+	glBindTexture(GL_TEXTURE_2D, obj->textureID);
+	shader->setUniform("myTextureSampler", 0);
 	//draw		
 
-	if (obj->transf.name == "plane"||obj->transf.name=="cube"||obj->transf.name=="cone"||obj->transf.name=="cylinder"||obj->transf.name=="sphere")
-	{		
-		if (showNormals&&obj->transf.name=="cube")
-			RenderNormal(obj);		
-		else
-		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO 바인딩				
-			glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
-		}
-			
+	if (obj->transf.name == "plane" ||obj->transf.name=="cube"|| obj->transf.name == "cone" || obj->transf.name == "cylinder" || obj->transf.name == "sphere")
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);
+		glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
 	}
 	else
 	{
-		glDrawArrays(GL_TRIANGLES, 0, obj->points.size());			
+		glDrawArrays(GL_TRIANGLES, 0, obj->points.size());
 	}
-	
-
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
+void Level::RenderNormal(Model* _obj)
+{	
+	glBindBuffer(GL_ARRAY_BUFFER, _obj->normal_VBO);
+	glBindVertexArray(_obj->normal_VAO);
+
+	glm::mat4x4 m2w = _obj->ComputeMatrix();
+	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);		
+	glDrawArrays(GL_LINES, 0, 48);	
+}
 
 
 Level::Level(): window (nullptr), shader(nullptr)
@@ -275,42 +279,3 @@ Level::~Level()
 
 
 
-void Level::RenderNormal(Model* obj)
-{			
-	glm::mat4x4 m2w = obj->ComputeMatrix();
-	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
-
-	// 법선 벡터를 직선으로 그리기 위해서, 각 정점에 대해 법선 벡터를 추가로 그립니다.
-	// 기존의 정점으로부터 법선 벡터를 외부로 연장한 점을 계산하여 추가
-
-	// 이 예제에서는 법선 벡터를 큐브의 각 면의 중앙에서 바깥쪽으로 향하는 직선으로 그립니다.
-	// 법선 벡터는 각 정점에 대해 [정점 위치 + 법선 벡터]로 설정합니다.
-
-	// 법선 벡터를 직선으로 그리기 위해 두 개의 정점이 필요합니다.
-	std::vector<GLfloat> normalVertices;
-
-	for (size_t i = 0; i < obj->normals.size(); i++) {
-		glm::vec3 startPoint = obj->points[i];  // 정점
-		glm::vec3 normal = obj->normals[i];     // 법선 벡터
-
-		// 법선 벡터를 [정점 + 법선 벡터]로 계산
-		glm::vec3 endPoint = startPoint + normal * 0.1f;  // 법선 벡터 길이를 0.1로 설정
-
-		// 법선 벡터를 직선으로 그리기 위해 정점 배열에 추가
-		normalVertices.push_back(startPoint.x);
-		normalVertices.push_back(startPoint.y);
-		normalVertices.push_back(startPoint.z);
-		normalVertices.push_back(endPoint.x);
-		normalVertices.push_back(endPoint.y);
-		normalVertices.push_back(endPoint.z);
-	}
-	glBindVertexArray(obj->VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
-	glBufferData(GL_ARRAY_BUFFER, normalVertices.size() * sizeof(GLfloat), normalVertices.data(), GL_STATIC_DRAW);
-
-	// 법선 벡터 그리기
-	glDrawArrays(GL_LINES, 0, 6);  // 법선 벡터를 그리기 위해 2개의 점마다 하나의 선을 그림
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}

@@ -46,8 +46,7 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
         if (key == GLFW_KEY_Z)
-        {
-            // 슬라이스 증가 및 업데이트
+        {          
             Model* cylinder = Level::GetPtr()->FindModel("cylinder");
             Model* cone = Level::GetPtr()->FindModel("cone");
 
