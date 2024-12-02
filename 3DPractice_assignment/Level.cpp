@@ -237,12 +237,15 @@ void Level::Render(Model* obj)
 	//draw		
 
 	if (obj->transf.name == "plane"||obj->transf.name=="cube"||obj->transf.name=="cone"||obj->transf.name=="cylinder"||obj->transf.name=="sphere")
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO 바인딩				
+	{		
 		if (showNormals&&obj->transf.name=="cube")
 			RenderNormal(obj);		
 		else
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);  // EBO 바인딩				
 			glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
+		}
+			
 	}
 	else
 	{
@@ -273,10 +276,7 @@ Level::~Level()
 
 
 void Level::RenderNormal(Model* obj)
-{	
-	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
-	glBindVertexArray(obj->VAO);
-
+{			
 	glm::mat4x4 m2w = obj->ComputeMatrix();
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
 
@@ -304,7 +304,7 @@ void Level::RenderNormal(Model* obj)
 		normalVertices.push_back(endPoint.y);
 		normalVertices.push_back(endPoint.z);
 	}
-
+	glBindVertexArray(obj->VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, obj->VBO);
 	glBufferData(GL_ARRAY_BUFFER, normalVertices.size() * sizeof(GLfloat), normalVertices.data(), GL_STATIC_DRAW);
 
