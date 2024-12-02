@@ -15,15 +15,18 @@ struct Model
 	std::vector<glm::vec2> UV;
 
 	std::vector<float> vertices;
+	std::vector<glm::vec3> normal_vertices;
 
 	std::vector<int> pointIndeces;
 	std::vector<int> normalIndeces;
 	unsigned int VBO;
+	unsigned int normal_VBO;
 	unsigned int VAO;
+	unsigned int normal_VAO;
 	unsigned int EBO=-1;
 
 	void LoadModel();
-
+	unsigned int textureID;
 	Model(const CS300Parser::Transform& _transform);
 	~Model();
 	
@@ -38,13 +41,15 @@ public:
 	void CreateModelSphere(int slices);
 public:
 	void UpdateSlices();
-	void GenerateCylinder(int slices);
-	void GenerateCone(int slices);
+	void MyCylinder(int slices);
+	void MyCone(int slices);
 public:
-	glm::vec3 calculateNormal(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3) 
+	glm::vec3 calculateNormal(glm::vec3 _p1, glm::vec3 _p2, glm::vec3 _p3) 
 	{
-		glm::vec3 v1 = p2 - p1;
-		glm::vec3 v2 = p3 - p1;
-		return glm::normalize(glm::cross(v1, v2));  // 외적을 계산하여 법선 벡터를 얻음
+		glm::vec3 v1 = _p2 - _p1;
+		glm::vec3 v2 = _p3 - _p1;
+		return glm::normalize(glm::cross(v1, v2));  
 	}
+public:
+	void Loadcheckboard();
 };

@@ -67,6 +67,6 @@ private:
 	//shaders
 	cg::Program* shader;	
 public:
-	void RenderNormal(Model* obj);
+	void RenderNormal(Model* _obj);
 };
 
