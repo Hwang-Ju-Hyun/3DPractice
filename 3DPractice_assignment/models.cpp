@@ -283,7 +283,7 @@ void Model::CreateModelCube()
 	//TODO: UVs
 	   //00 10 11
 	   //00 11 01
-	for (size_t i = 0; i < indicies.size(); i += 3) 
+	for (int i = 0; i < indicies.size(); i += 3) 
 	{		
 		int idx1 = indicies[i];
 		int idx2 = indicies[i + 1];
