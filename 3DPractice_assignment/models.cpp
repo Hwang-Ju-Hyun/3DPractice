@@ -98,6 +98,7 @@ void Model::LoadModel()
 			}
 		}
 	}
+
 }
 
 Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO(0), VAO(0)
