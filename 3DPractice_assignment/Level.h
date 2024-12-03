@@ -70,5 +70,6 @@ public:
 	void RenderNormal(Model* _obj);
 	bool b_tex = false;
 	bool render_normal = false;
+	bool b_normal = false;
 };
 

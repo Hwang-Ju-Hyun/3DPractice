@@ -9,7 +9,7 @@
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include "../extern/tiny_obj_loader.h"
 
-int Model::slices = 100;
+int Model::slices = 19;
 
 
 glm::mat4x4 Model::ComputeMatrix()
@@ -98,6 +98,7 @@ void Model::LoadModel()
 			}
 		}
 	}
+
 }
 
 Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO(0), VAO(0)
@@ -128,19 +129,17 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	}	
 
 	//normal vector
-	if (transf.name == "cube")
+	for (int i = 0; i < normals.size(); i++)
 	{
-		for (int i = 0; i < normals.size(); i++)
-		{
-			glm::vec3 start = points[i];
-			glm::vec3 normal = normals[i];
+		glm::vec3 start = points[i];
+		glm::vec3 normal = normals[i];
 
-			glm::vec3 end = start + normal;
+		glm::vec3 end = start + normal;
 
-			normal_vertices.push_back(start);			
-			normal_vertices.push_back(end);			
-		}
+		normal_vertices.push_back(start);
+		normal_vertices.push_back(end);
 	}
+	
 	
 
 
@@ -153,13 +152,11 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * (sizeof(float)), &vertices[0], GL_STATIC_DRAW);
 
-	//Gen normalVBO
-	if (transf.name == "cube"|| transf.name == "plane")
-	{
-		glGenBuffers(1, &normal_VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
-		glBufferData(GL_ARRAY_BUFFER, normal_vertices.size() * (sizeof(float)*3), normal_vertices.data(), GL_STATIC_DRAW);
-	}
+
+	glGenBuffers(1, &normal_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
+	glBufferData(GL_ARRAY_BUFFER, normal_vertices.size() * (sizeof(float) * 3), normal_vertices.data(), GL_STATIC_DRAW);
+
 	
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//Assign Coordinates	
@@ -170,27 +167,26 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 
 
 
-	//normal vao
-	if (transf.name == "cube")
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
-		glGenVertexArrays(1, &normal_VAO);
-		glBindVertexArray(normal_VAO);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-	}	
+
+	///////////////////
+	glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
+	glGenVertexArrays(1, &normal_VAO);
+	glBindVertexArray(normal_VAO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	/////////////////
 
 
 
 
 	//My EBO
-	if (this->transf.name == "plane"||this->transf.name=="cube"|| this->transf.name == "cone" || this->transf.name == "cylinder" || this->transf.name == "sphere")
+	if (  this->transf.name == "cylinder" || this->transf.name == "sphere")
 	{
 		glGenBuffers(1, &EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indicies.size(), &indicies[0], GL_STATIC_DRAW);
 	}	
-	
+	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//Assign Normals
@@ -201,8 +197,6 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
-
-
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -219,19 +213,19 @@ Model::~Model()
 void Model::CreateModelPlane()
 {
 	points = {
-		{-0.5f,0.5f,0.0f},			// 0 : ¿ÞÂÊ »ó´Ü 
-		{-0.5f,-0.5f,0.0f},			// 1 : ¿ÞÂÊ ÇÏ´Ü
-		{0.5f,-0.5f,0.f},			// 2 : ¿ìÃø ÇÏ´Ü		
-		{0.5f,0.5f,0.f}				// 3 : ¿ìÃø »ó´Ü
-	};
-
-	indicies = { 0,1,2,0,3,2 };
+	{ - 0.5 ,- 0.5 ,0},
+	{ 0.5, 0.5, 0}	  ,
+	{ - 0.5, 0.5, 0}  ,
+	{ - 0.5, - 0.5, 0},
+	{ 0.5, - 0.5, 0}  ,
+	{ 0.5, 0.5, 0 }
+	};	
 			
 	UV = {
-		{0.0f, 1.0f},				// 0 : ¿ÞÂÊ »ó´Ü 
-		{0.0f, 0.0f},				// 1 : ¿ÞÂÊ ÇÏ´Ü
-		{1.0f, 0.0f},				// 2 : ¿ìÃø ÇÏ´Ü
-		{0.0f, 1.0f},				// 0 : ¿ÞÂÊ »ó´Ü
+		{0.0f, 0.0f},				// 0 : ¿ÞÂÊ »ó´Ü 
+		{1.0f,1.0f},				// 1 : ¿ÞÂÊ ÇÏ´Ü
+		{0.0f, 1.0f},				// 2 : ¿ìÃø ÇÏ´Ü
+		{0.0f, 0.0f},				// 0 : ¿ÞÂÊ »ó´Ü
 		{1.0f, 0.0f},				// 2 : ¿ìÃø ÇÏ´Ü
 		{1.0f, 1.0f}				// 3 : ¿ìÃø »ó´Ü
 	};
@@ -248,82 +242,127 @@ void Model::CreateModelPlane()
 }
 
 void Model::CreateModelCube()
-{
-	//TODO: Points
+{	
 	points = {
-		{-0.5f, 0.5f, -0.5f},	//¿Þ À­ µÞ		0
-		{-0.5f, 0.5f, 0.5f },	//¿Þ À­ ¾Õ		1
-		{0.5f, 0.5f, 0.5f }, 	//¿À À­ ¾Õ		2
-		{0.5f, 0.5f, -0.5f },	//¿À À­ µÞ		3
-		{-0.5f, -0.5f, -0.5f},	//¿Þ ¹Ø µÞ		4
-		{-0.5f, -0.5f, 0.5f},	//¿Þ ¹Ø ¾Õ		5
-		{0.5f, -0.5f, 0.5f},	//¿À ¹Ø ¾Õ		6
-		{0.5f, -0.5f, -0.5f }	//¿À ¹Ø µÞ		7
+		{0.5, 0.5, 0.5},
+		{0.5, 0.5, - 0.5},
+		{- 0.5, 0.5, - 0.5	},
+		{0.5, 0.5, 0.5		},
+		{- 0.5, 0.5, - 0.5	},
+		{- 0.5, 0.5, 0.5		},
+		{- 0.5, - 0.5, 0.5	},
+		{0.5 ,- 0.5, 0.5		},
+		{0.5, 0.5, 0.5		},
+		{- 0.5, - 0.5, 0.5	},
+		{0.5 ,0.5 ,0.5		},
+		{- 0.5, 0.5 ,0.5		},
+		{0.5 ,- 0.5, 0.5		},
+		{0.5, - 0.5, - 0.5	},
+		{0.5 ,0.5 ,0.5		},
+		{0.5 ,- 0.5, - 0.5	},
+		{0.5 ,0.5 ,- 0.5		},
+		{0.5, 0.5 ,0.5		},
+		{0.5 ,- 0.5, - 0.5	},
+		{- 0.5 ,- 0.5 ,- 0.5	},
+		{- 0.5, 0.5, - 0.5	},
+		{0.5 ,- 0.5, - 0.5	},
+		{- 0.5, 0.5, - 0.5	},
+		{0.5 ,0.5 ,- 0.5		},
+		{- 0.5 ,- 0.5, - 0.5	},
+		{- 0.5, - 0.5, 0.5	},
+		{- 0.5, 0.5, - 0.5	},
+		{- 0.5, - 0.5, 0.5	},
+		{- 0.5 ,0.5, 0.5		},
+		{- 0.5 ,0.5, - 0.5	},
+		{- 0.5 ,- 0.5, 0.5	},
+		{- 0.5 ,- 0.5, - 0.5	},
+		{0.5, - 0.5, - 0.5	},
+		{- 0.5, - 0.5, 0.5	},
+		{0.5, - 0.5, - 0.5	},
+		{0.5, - 0.5, 0.5		},
 	};
-	indicies = {
-		{0,1,2,
-		0,2,3,		//À­¸é
-
-		1,5,6,
-		1,6,2,		//¾Õ¸é
-
-		2,6,7,
-		2,7,3,		//¿ìÃø¸é
-
-		0,4,5,
-		0,5,1,		//ÁÂÃø¸é
-
-		5,4,6,
-		4,7,6,		//¾Æ·§¸é
-
-		0,7,4,		//µÞ¸é
-		0,3,7}
-	};
-
-	//TODO: UVs
-	   //00 10 11
-	   //00 11 01
-	for (int i = 0; i < indicies.size(); i += 3) 
-	{		
-		int idx1 = indicies[i];
-		int idx2 = indicies[i + 1];
-		int idx3 = indicies[i + 2];
-
-	
-		UV.push_back({ (points[idx1].x + 0.5f), (points[idx1].y + 0.5f) });
-		UV.push_back({ (points[idx2].x + 0.5f), (points[idx2].y + 0.5f) });
-		UV.push_back({ (points[idx3].x + 0.5f), (points[idx3].y + 0.5f) });
-	}
 
 	normals = {
-		{0.0f, 1.0f, 0.0f},			// À­¸é
-		{0.0f, 0.0f, 1.0f},			// ¾Õ¸é
-		{1.0f, 0.0f, 0.0f},			// ¿ìÃø¸é	
-		{-1.0f, 0.0f, 0.0f},		// ÁÂÃø¸é
-		{0.0f, -1.0f, 0.0f},		// ¾Æ·§¸é
-		{0.0f, 0.0f, -1.0f}			// µÞ¸é
+		 {0, 1, 0	 },
+		 {0, 1, 0	 },
+		 {0, 1, 0	 },
+		 {0, 1, 0	 },
+		 {0, 1, 0	 },
+		 {0, 1, 0	 },
+		 {0, 0, 1	 },
+		 {0, 0, 1	 },
+		 {0, 0, 1	 },
+		 {0, 0, 1	 },
+		 {0, 0, 1	 },
+		 {0, 0, 1	 },
+		 {1, 0, 0	 },
+		 {1, 0, 0	 },
+		 {1, 0, 0	 },
+		 {1, 0, 0	 },
+		 {1, 0, 0	 },
+		 {1, 0, 0	 },
+		 {0, 0, -1}  ,
+		 {0, 0, -1}  ,
+		 {0, 0, -1}  ,
+		 {0, 0, -1}  ,
+		 {0, 0, -1}  ,
+		 {0, 0, -1}  ,
+		 {-1, 0, 0}  ,
+		 {-1, 0, 0}  ,
+		 {-1, 0, 0}  ,
+		 {-1, 0, 0}  ,
+		 {-1, 0, 0}  ,
+		 {-1, 0, 0}  ,
+		 {0, -1, 0}  ,
+		 {0, -1, 0}  ,
+		 {0, -1, 0}  ,
+		 {0, -1, 0}  ,
+		 {0, -1, 0}  ,
+		 {0, -1, 0}
 	};
-	 
-	std::vector<glm::vec3> tempvertex(8, glm::vec3{ 0.0f });
+
+	UV = {
+		{0, 0},
+		{1, 0},
+		{1, 1},
+		{0, 0},
+		{1, 1},
+		{0, 1},
+		{0, 0},
+		{1, 0},
+		{1, 1},
+		{0, 0},
+		{1, 1},
+		{0, 1},
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 0},
+		{1, 1},
+		{0, 1},
+		{0, 0},
+		{1, 0},
+		{1, 1},
+		{0, 0},
+		{1, 1},
+		{0, 1},
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 0},
+		{1, 1},
+		{0, 1},
+		{0, 0},
+		{1, 0},
+		{1, 1},
+		{0, 0},
+		{1, 1},
+		{0, 1 }
+	};
+
 	
-	for (int i = 0; i < indicies.size(); i += 3) {
 
-		glm::vec3 v0 = points[indicies[i]];
-		glm::vec3 v1 = points[indicies[i + 1]];
-		glm::vec3 v2 = points[indicies[i + 2]];
-		
-		glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-
-		tempvertex[indicies[i]] += normal;
-		tempvertex[indicies[i + 1]] += normal;
-		tempvertex[indicies[i + 2]] += normal;
-	}
-
-	normals = tempvertex;	
-	for (int i = 0; i < normals.size(); i++)
-	{
-		normals[i] = glm::normalize(normals[i]);
-	}
+	
 }
 
 void Model::CreateModelCone(int slices)
@@ -331,63 +370,75 @@ void Model::CreateModelCone(int slices)
 	points.clear();
 	normals.clear();
 	UV.clear();
-	float angle_triangle = 360.0f / slices;
+	float angle = 360.0f / slices;
 	
-	glm::vec3 top = { 0.0f, 0.5f, 0.0f }; 
-	points.push_back(top);
-	normals.push_back({0.0f, 1.0f, 0.0f });
-	UV.push_back({ 0.5f, 1.0f });
-	      
-	for (int i = 0; i < slices; i++) 
+	glm::vec3 top = { 0.f, 0.5f, 0.0f }; 
+	glm::vec3 bottom_center = { 0.f,-0.5f,0.f };		
+	int i = 0;
+	for (i = 0; i < slices; i++) 
 	{
-		float angle = glm::radians(i * angle_triangle);
-		float x = 0.5f * std::cos(angle);  
-		float z = 0.5f * std::sin(angle);		 
-		points.push_back({x,-0.5f,z});
-		normals.push_back({ 0.0f, -1.0f, 0.0f });
+		float angle_triangle = glm::radians(i * angle);
+		float x1 = 0.5f * std::cos(angle_triangle);
+		float z1 = 0.5f * std::sin(angle_triangle);
+		points.push_back({ x1,-0.5f,z1});
+		points.push_back({ top });				
 
+		angle_triangle = glm::radians((i + 1) * angle);
+		float x2 = 0.5f * std::cos(angle_triangle);
+		float z2 = 0.5f * std::sin(angle_triangle);
+		points.push_back({ x2,-0.5f,z2 });
+
+		glm::vec3 p1 = { x1, -0.5f, z1 };
+		glm::vec3 p2 = top;
+		glm::vec3 p3 = { x2, -0.5f, z2 };
+
+		glm::vec3 side_normal = glm::normalize(glm::cross(p3 - p1, p2 - p1));
+		normals.push_back(-side_normal);
+		normals.push_back(-side_normal);
+		normals.push_back(-side_normal);
+
+
+		points.push_back({ x1,-0.5f,z1 });
+		points.push_back({ x2,-0.5f,z2 });
+		points.push_back({ bottom_center });					
+
+
+		glm::vec3 bottom_normal = { 0.0f, -1.0f, 0.0f };
+		normals.push_back(bottom_normal);
+		normals.push_back(bottom_normal);
+		normals.push_back(bottom_normal);
 		//TODO: UVÁÂÇ¥ ¼öÁ¤ÇØ¾ßµÊ
-		UV.push_back({ 0.f,0.f });
-	}
+			 
+		float uvx = (float)i / float(slices);
+		float uvx2 = float(i + 1) / float(slices);
+		float uvx1 = (uvx + uvx2) / 2.f;
+		UV.push_back({ uvx,0.f }); UV.push_back({ uvx1,1.f }); UV.push_back({ uvx2,0.f }); 
+		UV.push_back({ uvx,0.f }); UV.push_back({ uvx2,0.f }); UV.push_back({ uvx1,0.f });
+		
+	}		
+	//float angle_triangle = glm::radians(i - 2 * angle);
+	//float x1 = 0.5f * std::cos(angle_triangle);
+	//float z1 = 0.5f * std::sin(angle_triangle);
+	//points.push_back({ x1,-0.5f,z1 });
+	//points.push_back({ top });
+	//angle_triangle = glm::radians(i-1 * angle);
 
-	
-	for (int i = 1; i < slices; ++i) 
-	{
-		indicies.push_back(0); 
-		indicies.push_back(i);
-		indicies.push_back(i + 1);
-	}
+	//float x2 = 0.5f * std::cos(angle_triangle);
+	//float z2 = 0.5f * std::sin(angle_triangle);
+	//points.push_back({ x2,-0.5f,z2 });
 
-	indicies.push_back(0);
-	indicies.push_back(slices);
-	indicies.push_back(1);
+	//points.push_back({ x1,-0.5f,z1 });
+	//points.push_back({ x2,-0.5f,z2 });
+	//points.push_back({ bottom_center });
 
-	
-	for (int i = 1; i < slices - 1; ++i) 
-	{
-		indicies.push_back(1);
-		indicies.push_back(i + 1);
-		indicies.push_back(i);
-	}
-
-	//std::vector<glm::vec3> tempvertex(normals.size(), glm::vec3(0.0f));
-
-	//for (size_t i = 0; i < indicies.size(); i += 3) {
-
-	//	glm::vec3 v0 = points[indicies[i]];
-	//	glm::vec3 v1 = points[indicies[i + 1]];
-	//	glm::vec3 v2 = points[indicies[i + 2]];
-
-	//	glm::vec3 normal = glm::cross(v1 - v0, v2 - v0);
-
-	//	tempvertex[indicies[i]] += normal;
-	//	tempvertex[indicies[i + 1]] += normal;
-	//	tempvertex[indicies[i + 2]] += normal;
-	//}
-
-	//normals = tempvertex;
-
-
+	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
+	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
+	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
+	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
+	////TODO: UVÁÂÇ¥ ¼öÁ¤ÇØ¾ßµÊ
+	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
+	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
+	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
 }
 
 void Model::CreateModelCylinder(int slices)
@@ -654,4 +705,6 @@ void Model::Loadcheckboard()
 	//Data »ðÀÔ glTexParameteri
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
 }

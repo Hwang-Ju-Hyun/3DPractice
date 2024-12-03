@@ -22,17 +22,17 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
         if (key == GLFW_KEY_W)
-            Level::GetPtr()->RotateCamX(-5.0f);
+            Level::GetPtr()->RotateCamX(0.5f);
         if (key == GLFW_KEY_A)
-            Level::GetPtr()->RotateCamY(-5.0f);
+            Level::GetPtr()->RotateCamY(-0.5f);
         if (key == GLFW_KEY_D)
-            Level::GetPtr()->RotateCamY(5.0f);
+            Level::GetPtr()->RotateCamY(0.5f);
         if (key == GLFW_KEY_S)
-            Level::GetPtr()->RotateCamX(5.0f);
+            Level::GetPtr()->RotateCamX(-0.5f);
         if (key == GLFW_KEY_Q)
-            Level::GetPtr()->RotateCamZ(5.0f);
+            Level::GetPtr()->RotateCamZ(0.01f);
         if (key == GLFW_KEY_E)
-            Level::GetPtr()->RotateCamZ(-5.0f);
+            Level::GetPtr()->RotateCamZ(-0.01f);
     }
     static bool wireframeMode = false;
 
@@ -87,6 +87,7 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     if (action == GLFW_PRESS && key == GLFW_KEY_N)
     {        
         Level::GetPtr()->render_normal = !(Level::GetPtr()->render_normal);
+        Level::GetPtr()->b_normal = !(Level::GetPtr()->b_normal);
     }
     //TODO: TRIGGER NORMALS AVERAGE
 }

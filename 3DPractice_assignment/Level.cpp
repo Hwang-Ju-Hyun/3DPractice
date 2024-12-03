@@ -6,6 +6,7 @@
 #include <GL/GL.h>
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
+#include "animations.h"
 
 
 Level* Level::ptr = nullptr;
@@ -41,7 +42,15 @@ int Level::Initialize()
 
 	//Load Scene
 	CS300Parser parser;
-	parser.LoadDataFromFile("data/scenes/scene_A0.txt");
+	parser.LoadDataFromFile("data/scenes/scene_A1.txt");	
+	
+	int light_size = parser.lights.size();
+	/*for (int i = 0; i < light_size; i++)
+	{
+		int time = glfwGetTime();
+		parser.lights[i].anims[i].Update(parser.lights[i].pos, time * 0.1f);
+	}*/
+
 
 	//Convert from parser->obj to Model
 	for (auto o : parser.objects)
@@ -109,16 +118,28 @@ void Level::Run()
 		cam.ViewMat = V;
 
 		//The image is mirrored on X
-		cam.ProjMat = glm::perspective(glm::radians(cam.fovy), cam.width / cam.height, cam.nearPlane, cam.farPlane);
+		cam.ProjMat = glm::perspective(glm::radians(cam.fovy), cam.width / cam.height, cam.nearPlane, cam.farPlane);		
 
 		//For each object in the level
 		for (auto o : allObjects)
 		{
 			//Render the object
 			Render(o);
-		}
-
+		}						
+		
 		glUseProgram(0);
+
+		Model* monkey = FindModel("suzanne_mesh");
+		monkey;
+		
+		for (int i = 0; i < monkey->transf.anims.size(); i++)
+		{
+			auto a = glfwGetTime();
+			monkey->transf.pos = monkey->transf.anims[i].Update(monkey->transf.pos,a*0.01);
+		}		
+
+		
+
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -188,16 +209,16 @@ void Level::RotateCamY(float angle)
 
 void Level::RotateCamX(float angle)
 {
-	glm::vec3 camDirection = cam.camTarget - cam.camPos;
-	glm::vec3 rotateDir = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(angle), cam.camRight) * glm::vec4(camDirection, 1.0f));
-	cam.camPos = cam.camTarget - rotateDir;
+	glm::vec3 right = glm::cross(cam.camUp, cam.camPos - cam.camTarget);
+	glm::vec3 rotVec = glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), right) * glm::vec4(cam.camTarget - cam.camPos, 1));
 
-	cam.camUp = glm::normalize(glm::cross(cam.camRight, glm::normalize(cam.camTarget - cam.camPos)));
+	if (abs(rotVec.z) > 0.1f)
+		cam.camPos = cam.camTarget - rotVec;
 }
 
 void Level::RotateCamZ(float angle)
 {	
-	cam.camPos.z -= angle;
+	cam.camPos += angle * (cam.camTarget - cam.camPos);
 }
 
 
@@ -234,8 +255,10 @@ void Level::Render(Model* obj)
 	glBindTexture(GL_TEXTURE_2D, obj->textureID);
 	shader->setUniform("myTextureSampler", 0);	
 	shader->setUniform("hasTexture", b_tex);
+	shader->setUniform("normal", b_normal);		
+
 	//draw		
-	if (obj->transf.name == "plane" ||obj->transf.name=="cube"|| obj->transf.name == "cone" || obj->transf.name == "cylinder" || obj->transf.name == "sphere")
+	if ( obj->transf.name == "cylinder" || obj->transf.name == "sphere")
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);
 		glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
@@ -256,7 +279,7 @@ void Level::RenderNormal(Model* _obj)
 
 	glm::mat4x4 m2w = _obj->ComputeMatrix();
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);		
-	glDrawArrays(GL_LINES, 0, 48);	
+	glDrawArrays(GL_LINES, 0, _obj->points.size() *2);	
 }
 
 
