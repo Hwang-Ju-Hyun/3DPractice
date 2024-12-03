@@ -234,8 +234,9 @@ void Level::Render(Model* obj)
 	glBindTexture(GL_TEXTURE_2D, obj->textureID);
 	shader->setUniform("myTextureSampler", 0);	
 	shader->setUniform("hasTexture", b_tex);
+	shader->setUniform("normal", b_normal);
 	//draw		
-	if (obj->transf.name == "plane" ||obj->transf.name=="cube"|| obj->transf.name == "cone" || obj->transf.name == "cylinder" || obj->transf.name == "sphere")
+	if ( obj->transf.name == "cylinder" || obj->transf.name == "sphere")
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);
 		glDrawElements(GL_TRIANGLES, obj->indicies.size(), GL_UNSIGNED_INT, 0);
@@ -256,7 +257,7 @@ void Level::RenderNormal(Model* _obj)
 
 	glm::mat4x4 m2w = _obj->ComputeMatrix();
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);		
-	glDrawArrays(GL_LINES, 0, 48);	
+	glDrawArrays(GL_LINES, 0, _obj->points.size() *2);	
 }
 
 

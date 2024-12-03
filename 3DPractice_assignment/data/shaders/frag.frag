@@ -4,11 +4,21 @@ out vec4 FragColor;
 in vec2 UV;
 uniform sampler2D myTextureSampler;
 uniform bool hasTexture;
+uniform bool normal;
 
 void main()
-{   
-	if(hasTexture)
-		FragColor = texture(myTextureSampler, UV);
+{   	
+	
+	if(normal)
+	{
+		FragColor=vec4(1.0,0.0,0.0,1.0);
+	}
 	else
-		FragColor = vec4(UV,0.0, 1.0);
+	{
+		if(hasTexture)
+			FragColor = texture(myTextureSampler, UV);
+		else
+			FragColor = vec4(UV,0, 1.0);
+	}
+	
 }

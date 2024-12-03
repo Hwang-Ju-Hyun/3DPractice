@@ -87,6 +87,7 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     if (action == GLFW_PRESS && key == GLFW_KEY_N)
     {        
         Level::GetPtr()->render_normal = !(Level::GetPtr()->render_normal);
+        Level::GetPtr()->b_normal = !(Level::GetPtr()->b_normal);
     }
     //TODO: TRIGGER NORMALS AVERAGE
 }
