@@ -23,6 +23,13 @@ struct Light
     vec3 diffuse;
     vec3 specular;
     
+	 float     amb     ;
+     float     inner   ;
+     float     outer   ;
+     float     falloff ;
+     float     bias    ;
+     unsigned  pcf     
+
     vec3 position;
     float spotExponent;
 	float spotCutoff; 
@@ -52,6 +59,7 @@ void main()
 	vec3 L=normalize(uLight[0].position);
 	vec3 V=normalize(uCameraPos - fragWorldPos);
 	vec3 R = normalize(reflect(-L, N));
+
 
 	
 

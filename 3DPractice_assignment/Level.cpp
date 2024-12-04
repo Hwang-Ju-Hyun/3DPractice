@@ -317,13 +317,7 @@ void Level::Render(Model* obj)
 		shader->setUniform("uLight[" + std::to_string(i) + "].ambient", all_lights[i].ambientColor);
 		shader->setUniform("uLight[" + std::to_string(i) + "].diffuse", all_lights[i].diffuseColor);
 		shader->setUniform("uLight[" + std::to_string(i) + "].specular",all_lights[i].specularColor);
-		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotExponent);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotCutoff);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotCosCutoff);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].constantAttenuation);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].linearAttenuation);
-		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].quadraticAttenuation);
+		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);		
 	}
 
 	CS300Parser::MaterialParameters mp;	

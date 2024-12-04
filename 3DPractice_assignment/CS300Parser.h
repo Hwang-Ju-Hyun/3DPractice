@@ -47,28 +47,13 @@ class CS300Parser
         Transform obj;
         glm::vec3 pos;
         glm::vec3 dir;//ºûÀÇ ¹æÇâ(SPOT,DIRECTIONAL)
-        glm::vec3 col;
+        glm::vec3 col;//¸ðµç intensity from light
         glm::vec3 att;     //c1,c2,c3
-        float     amb     = 0.0f;
         float     inner   = 0.0f;
         float     outer   = 30.0f;
         float     falloff = 1.0f;
-        float     bias    = 0.0f;
-        unsigned  pcf     = 0;
 
-        glm::vec4 ambientColor = { 0.f,0.f,0.f  ,0.f };//Intensity ÁÖº¯±¤
-        glm::vec4 diffuseColor = { 0.f,0.f,0.f ,0.f }; //diffuse ±¤
-        glm::vec4 specularColor = { 0.f,0.f,0.f,0.f }; //specular ±¤
-        
         std::string type = "POINT";
-
-        float spotExponent;//
-        float spotCutoff;
-        // (range: [0.0,90.0], 180.0)
-        float spotCosCutoff; // (range: [1.0,0.0], -1.0)
-        float constantAttenuation;
-        float linearAttenuation;
-        float quadraticAttenuation;
 
         std::vector<Animations::Anim> anims;
     };
