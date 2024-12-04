@@ -103,6 +103,8 @@ void Model::LoadModel()
 
 Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO(0), VAO(0)
 {
+	transf.StartPos = transf.pos;
+
 	//load points
 	LoadModel();
 	
@@ -139,9 +141,6 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		normal_vertices.push_back(start);
 		normal_vertices.push_back(end);
 	}
-	
-	
-
 
 	//Sanity Check
 	if (vertices.size() == 0)
@@ -207,6 +206,14 @@ Model::~Model()
 {
 	glDeleteBuffers(1, &VBO);
 	glDeleteVertexArrays(1, &VAO);
+}
+
+void Model::ModelUpdate(float dt)
+{
+	t += dt;
+	transf.pos = transf.StartPos;
+	for (int i = 0; i < transf.anims.size(); i++)
+		transf.pos = transf.anims[i].Update(transf.pos, t);
 }
 
 //TODO:

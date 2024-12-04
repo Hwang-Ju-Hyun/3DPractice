@@ -141,10 +141,14 @@ void CS300Parser::LoadDataFromFile(const char * filename)
         else if (id == "mesh")
         {
             std::string mesh;
-            inFile >> mesh;
-            if (objects.size() > 0)
+            inFile >> mesh;            
+            if (last == LastAdded::OBJECT)
             {
                 objects.back().mesh = mesh;
+            }
+            else if (last == LastAdded::LIGHT)
+            {              
+                lights.back().obj.mesh = mesh;
             }
         }
         else if (id == "normalMap")

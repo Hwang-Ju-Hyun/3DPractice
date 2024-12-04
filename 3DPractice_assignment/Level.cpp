@@ -7,6 +7,8 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include "animations.h"
+#include <chrono>
+#include <vector>
 
 
 Level* Level::ptr = nullptr;
@@ -40,11 +42,11 @@ int Level::Initialize()
 	//Set callbacks
 	glfwSetKeyCallback(window, Controls::keyCallback);
 
-	//Load Scene
-	CS300Parser parser;
+	//Load Scene	
 	parser.LoadDataFromFile("data/scenes/scene_A1.txt");	
-	
-	int light_size = parser.lights.size();
+		
+
+	//int light_size = parser.lights.size();
 	/*for (int i = 0; i < light_size; i++)
 	{
 		int time = glfwGetTime();
@@ -56,6 +58,11 @@ int Level::Initialize()
 	for (auto o : parser.objects)
 	{
 		allObjects.push_back(new Model(o));
+	}
+	for (auto light : parser.lights)
+	{
+		light.obj.sca = { 1.f,1.f,1.f };
+		allObjects.push_back(new Model(light.obj));		
 	}
 
 	//Save camera
@@ -81,15 +88,63 @@ int Level::Initialize()
 	return 0;
 }
 
+void Level::LightUpdate(float _dt)
+{
+	time += _dt;
+	std::vector<CS300Parser::Light> light = parser.lights;
+	for (int i = 0; i < light.size(); i++)
+	{
+		light[i].obj.pos = light[i].pos;
+		if (light[i].anims.size() > 0)
+		{
+			for (int j = 0; j < light[i].anims.size(); j++)
+			{				
+				light[i].obj.pos = light[i].anims[j].Update(light[i].obj.pos, time);
+			}
+		}
+		light[i].obj.sca = { 5.f,5.f,5.f };	
+	}
+	int idx = 0;
+	for (int i = 12; i < allObjects.size(); i++)
+	{
+		allObjects[i]->transf = light[idx].obj;		
+		idx++;
+	}
+}
+
+int Level::GetType(std::string _str)
+{
+	if (_str == "POINT")
+		return 1;
+	else if (_str == "DIR")
+		return 2;
+	else if(_str=="SPOT")
+		return 3;
+}
+
 
 void Level::Run()
 {
 	glClearColor(0, 0, 0, 0);
+	float TLastFrame = 0;
+
 	// Main loop
 	while (!glfwWindowShouldClose(window)) 
 	{
+		float TCurrentFrame = 0;
+
+		
+		std::chrono::time_point<std::chrono::steady_clock> time = std::chrono::steady_clock::now();		
 		// Render graphics here
 		 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		 //Update objects pos
+		 for (auto obj : allObjects)
+			 obj->ModelUpdate(TLastFrame);
+		 
+		 
+		 LightUpdate(TLastFrame);
+		 
 
 		//use shader program
 		glUseProgram(shader->handle);
@@ -125,26 +180,19 @@ void Level::Run()
 		{
 			//Render the object
 			Render(o);
-		}						
-		
+		}										
+
 		glUseProgram(0);
-
-		Model* monkey = FindModel("suzanne_mesh");
-		monkey;
-		
-		for (int i = 0; i < monkey->transf.anims.size(); i++)
-		{
-			auto a = glfwGetTime();
-			monkey->transf.pos = monkey->transf.anims[i].Update(monkey->transf.pos,a*0.01);
-		}		
-
-		
 
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-	}
 
+		std::chrono::time_point<std::chrono::steady_clock> endtime = std::chrono::steady_clock::now();
+		
+		TCurrentFrame = std::chrono::duration<float>(endtime - time).count();
+		TLastFrame = TCurrentFrame;
+	}
 	return;
 }
 
@@ -257,7 +305,35 @@ void Level::Render(Model* obj)
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
 
-	//draw		
+	std::vector<CS300Parser::Light> all_lights=parser.lights;
+	int light_size = all_lights.size();
+	shader->setUniform("uLightNum", light_size);
+	shader->setUniform("uCameraPos", Level::GetPtr()->cam.camPos);	
+		
+
+	for (int i = 0; i < light_size; i++)
+	{		
+		shader->setUniform("uLight[" + std::to_string(i) + "].type", GetType(all_lights[i].type));
+		shader->setUniform("uLight[" + std::to_string(i) + "].ambient", all_lights[i].ambientColor);
+		shader->setUniform("uLight[" + std::to_string(i) + "].diffuse", all_lights[i].diffuseColor);
+		shader->setUniform("uLight[" + std::to_string(i) + "].specular",all_lights[i].specularColor);
+		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotExponent);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotCutoff);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].spotCosCutoff);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].constantAttenuation);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].linearAttenuation);
+		shader->setUniform("uLight[" + std::to_string(i) + "].spotExponent", all_lights[i].quadraticAttenuation);
+	}
+
+	CS300Parser::MaterialParameters mp;	
+	shader->setUniform("material.ambient",  mp.ambient);
+	shader->setUniform("material.diffuse",  mp.diffuse);
+	shader->setUniform("material.specular", mp.specular);
+	shader->setUniform("material.shininess",mp.shininess);
+
+
+	//draw
 	if ( obj->transf.name == "cylinder" || obj->transf.name == "sphere")
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->EBO);
@@ -282,7 +358,6 @@ void Level::RenderNormal(Model* _obj)
 	glDrawArrays(GL_LINES, 0, _obj->points.size() *2);	
 }
 
-
 Level::Level(): window (nullptr), shader(nullptr)
 {
 
@@ -295,6 +370,3 @@ Level::~Level()
 
 	allObjects.clear();
 }
-
-
-

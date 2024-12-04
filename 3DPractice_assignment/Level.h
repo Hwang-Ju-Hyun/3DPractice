@@ -5,11 +5,12 @@
 
 class GLFWwindow;
 class Model;
+class CS300Parser;
 
 #include <vector>
 #include "program.h"
 #include <iostream>
-
+#include "CS300Parser.h"
 //Singleton level
 struct Level
 {
@@ -42,7 +43,7 @@ private:
 
 	std::vector<Model*> allObjects;
 
-
+	CS300Parser parser;
 
 	//camera 
 	struct Camera
@@ -66,10 +67,14 @@ private:
 
 	//shaders
 	cg::Program* shader;	
+
 public:
 	void RenderNormal(Model* _obj);
 	bool b_tex = false;
 	bool render_normal = false;
 	bool b_normal = false;
+	void LightUpdate(float _dt);
+	float time = 0.f;
+	int GetType(std::string _str);
 };
 

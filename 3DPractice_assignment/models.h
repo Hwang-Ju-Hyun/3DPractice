@@ -30,6 +30,8 @@ struct Model
 	Model(const CS300Parser::Transform& _transform);
 	~Model();
 	
+	void ModelUpdate(float dt);
+	
 	static int slices;
 
 public:
@@ -38,7 +40,7 @@ public:
 	void CreateModelCube();
 	void CreateModelCone(int slices);
 	void CreateModelCylinder(int slices);
-	void CreateModelSphere(int slices);
+	void CreateModelSphere(int slices);	
 public:
 	void UpdateSlices();
 	void MyCylinder(int slices);
@@ -52,4 +54,7 @@ public:
 	}
 public:
 	void Loadcheckboard();
+
+	float t = 0;
+
 };

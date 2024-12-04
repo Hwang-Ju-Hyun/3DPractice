@@ -6,26 +6,25 @@ layout(location = 2) in vec2 vTextCoords;
 
 uniform mat4 model;
 
-struct Light
-{
-    int  type;
-    
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    
-    vec3 position;
-    //  other variables 
-    //  ...
-};
-
 out vec4 color;
 out vec3 Normal;
 out vec2 UV;
 
+
+out vec2 fragTexCoord;
+// 세계 공간에서의 법선
+out vec3 fragNormal;
+// 세계 공간에서의 위치
+out vec3 fragWorldPos;
+
+
 void main()
 {
-   gl_Position = model * vPosition; 
+   gl_Position = model * vPosition;   
    UV=vTextCoords;
-   color = vec4(0.5,0.5,0.5,1);      
+   color = vec4(0.5,0.5,0.5,1.0);   
+   
+   fragWorldPos=(model*vPosition).xyz;
+   fragNormal=(vec4(vNormals,0.0)*model).xyz;
+   fragTexCoord=vTextCoords;
 }

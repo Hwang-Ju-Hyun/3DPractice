@@ -22,13 +22,13 @@ void Controls::keyCallback(GLFWwindow* pWindow, int key, int scancode, int actio
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
         if (key == GLFW_KEY_W)
-            Level::GetPtr()->RotateCamX(0.5f);
+            Level::GetPtr()->RotateCamX(1.5f);
         if (key == GLFW_KEY_A)
-            Level::GetPtr()->RotateCamY(-0.5f);
+            Level::GetPtr()->RotateCamY(-1.5f);
         if (key == GLFW_KEY_D)
-            Level::GetPtr()->RotateCamY(0.5f);
+            Level::GetPtr()->RotateCamY(1.5f);
         if (key == GLFW_KEY_S)
-            Level::GetPtr()->RotateCamX(-0.5f);
+            Level::GetPtr()->RotateCamX(-1.5f);
         if (key == GLFW_KEY_Q)
             Level::GetPtr()->RotateCamZ(0.01f);
         if (key == GLFW_KEY_E)
