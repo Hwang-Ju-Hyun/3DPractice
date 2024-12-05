@@ -46,6 +46,7 @@ class CS300Parser
     {        
         Transform obj;
         glm::vec3 pos;
+        glm::vec3 startPos;
         glm::vec3 dir;//빛의 방향(SPOT,DIRECTIONAL)
         glm::vec3 col;//모든 intensity from light
         glm::vec3 att;     //c1,c2,c3
@@ -63,10 +64,10 @@ class CS300Parser
 
     struct MaterialParameters
     {
-        glm::vec4 ambient = { 1.f,1.f,1.f  ,1.f };//coefficient ambient
-        glm::vec4 diffuse = { /*텍스쳐칼라*/};
-        glm::vec4 specular = { 1.f,1.f,1.f,1.f };//coefficient  specular
-        float shininess = 0.f; //ns in specular
+        glm::vec3 ambient = {0.f,0.f,0.f  };//coefficient ambient
+        glm::vec3 diffuse = { 1.f,1.f,1.f,};//텍스쳐 칼라
+        glm::vec3 specular = { 1.f,1.f,1.f };//coefficient  specular
+        float shininess = 55.f; //ns in specular
     };
     
 

@@ -76,5 +76,7 @@ public:
 	void LightUpdate(float _dt);
 	float time = 0.f;
 	int GetType(std::string _str);
+	bool b_normal_avg = true;
+	void calculate_normal_avg(Model* _obj);
 };
 

@@ -9,6 +9,7 @@
 #include "animations.h"
 #include <chrono>
 #include <vector>
+#include <iostream>
 
 
 Level* Level::ptr = nullptr;
@@ -63,7 +64,14 @@ int Level::Initialize()
 	{
 		light.obj.sca = { 1.f,1.f,1.f };
 		allObjects.push_back(new Model(light.obj));		
-	}
+		if (light.type == "SPOT")
+		{
+			light.startPos = light.pos;
+			light.obj.StartPos = light.startPos;
+		}
+			
+	}	
+	
 
 	//Save camera
 	cam.fovy = parser.fovy;
@@ -100,10 +108,32 @@ void Level::LightUpdate(float _dt)
 			for (int j = 0; j < light[i].anims.size(); j++)
 			{				
 				light[i].obj.pos = light[i].anims[j].Update(light[i].obj.pos, time);
-			}
-		}
+				light[i].pos=light[i].anims[j].Update(light[i].obj.pos, time);
+			}			
+		}		
 		light[i].obj.sca = { 5.f,5.f,5.f };	
 	}
+
+	
+	//for (int i = 0; i < parser.lights.size(); i++)
+	//{
+	//	//parser.lights[i].obj.pos = parser.lights[i].pos;		
+	//	
+	//	if (parser.lights[i].anims.size() > 0)
+	//	{
+	//		parser.lights[i].pos = parser.lights[i].startPos;
+	//		for (int j = 0; j < parser.lights[i].anims.size(); j++)
+	//		{
+	//			parser.lights[i].pos = parser.lights[i].anims[j].Update(parser.lights[i].pos, time);
+	//			parser.lights[i].obj.pos = parser.lights[i].obj.pos;
+	//		}
+	//	}
+	//	parser.lights[i].obj.sca = { 5.f,5.f,5.f };
+	//}
+
+
+
+
 	int idx = 0;
 	for (int i = 12; i < allObjects.size(); i++)
 	{
@@ -122,6 +152,33 @@ int Level::GetType(std::string _str)
 		return 3;
 }
 
+void Level::calculate_normal_avg(Model* _obj)
+{
+	if (_obj->normal_vertices.size() > 3)
+	{
+		_obj->normal_vertices.clear();
+		int nor_size = _obj->points.size();
+		for (int i = 0; i < nor_size; i++)
+		{
+			glm::vec3 start = _obj->points[i];
+			glm::vec3 normal = _obj->normals[i];
+			glm::vec3 end = glm::vec3(0, 0, 0);
+			int cnt = 0;
+			for (int j = 0; j < nor_size; j++)
+			{
+				if (start == _obj->points[j])
+				{		
+					cnt++;					
+					end += (_obj->normals[j]);
+				}
+			}			
+			_obj->normal_vertices.push_back(start);			
+			_obj->normal_vertices.push_back(start + glm::normalize(end));
+		}
+	}
+	int a = 0;
+}
+
 
 void Level::Run()
 {
@@ -134,15 +191,23 @@ void Level::Run()
 		float TCurrentFrame = 0;
 
 		
-		std::chrono::time_point<std::chrono::steady_clock> time = std::chrono::steady_clock::now();		
+		std::chrono::time_point<std::chrono::steady_clock> time = std::chrono::steady_clock::now();
 		// Render graphics here
 		 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		 
+
+		 /*if (b_normal_avg)
+		 {
+			 calculate_normal_avg();
+		 }*/
+
 
 		 //Update objects pos
 		 for (auto obj : allObjects)
-			 obj->ModelUpdate(TLastFrame);
+			 obj->ModelUpdate(TLastFrame);		 
+
 		 
-		 
+		 std::vector<CS300Parser::Light> all_lights = parser.lights;
 		 LightUpdate(TLastFrame);
 		 
 
@@ -196,92 +261,6 @@ void Level::Run()
 	return;
 }
 
-void Level::Cleanup()
-{
-	// Clean up
-	glfwDestroyWindow(window);
-	glfwTerminate();
-
-	DeletePtr();
-}
-
-Level* Level::GetPtr()
-{
-	if (!ptr)
-		ptr = new Level;
-	return ptr;
-}
-
-void Level::DeletePtr()
-{
-	if (ptr)
-	{
-		delete ptr;
-	}
-	
-	ptr = nullptr;
-}
-
-#include <fstream>
-#include <sstream>
-
-void Level::ReloadShaderProgram()
-{
-	glUseProgram(0);
-
-	if (shader)
-		delete shader;
-	
-	std::stringstream v;
-	std::stringstream f;
-
-	std::ifstream file("data/shaders/vert.vert");
-
-	if (file.is_open())
-	{
-		v << file.rdbuf();
-	}
-
-	file.close();
-	file.open("data/shaders/frag.frag");
-	f << file.rdbuf();
-	file.close();
-
-	shader = new cg::Program(v.str().c_str(), f.str().c_str());
-}
-
-void Level::RotateCamY(float angle)
-{
-	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), cam.camUp) * glm::vec4(cam.camTarget - cam.camPos, 1));
-}
-
-void Level::RotateCamX(float angle)
-{
-	glm::vec3 right = glm::cross(cam.camUp, cam.camPos - cam.camTarget);
-	glm::vec3 rotVec = glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), right) * glm::vec4(cam.camTarget - cam.camPos, 1));
-
-	if (abs(rotVec.z) > 0.1f)
-		cam.camPos = cam.camTarget - rotVec;
-}
-
-void Level::RotateCamZ(float angle)
-{	
-	cam.camPos += angle * (cam.camTarget - cam.camPos);
-}
-
-
-
-Model* Level::FindModel(std::string _name)
-{
-	int size = allObjects.size();
-	for (int i = 0; i < size; i++)
-	{
-		if (allObjects[i]->transf.name == _name)
-			return allObjects[i];
-	}
-	return nullptr;
-}
-
 bool showNormals = true;
 
 void Level::Render(Model* obj)
@@ -305,26 +284,52 @@ void Level::Render(Model* obj)
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
 
-	std::vector<CS300Parser::Light> all_lights=parser.lights;
-	int light_size = all_lights.size();
-	shader->setUniform("uLightNum", light_size);
-	shader->setUniform("uCameraPos", Level::GetPtr()->cam.camPos);	
-		
+	
+	if (obj->transf.name == "")
+	{
+		shader->setUniform("LightColorOn", true);
+	}
+	else
+	{
+		shader->setUniform("LightColorOn", false);
+	}
+	
 
+	std::vector<CS300Parser::Light> all_lights=parser.lights;
+	int light_size = all_lights.size();	
+	shader->setUniform("uLightNum", light_size);	
+
+	glm::vec3 camdir = glm::normalize(Level::GetPtr()->cam.camPos) - (Level::GetPtr()->cam.camTarget);
+	glm::vec3 campos = (Level::GetPtr()->cam.camPos);
+	shader->setUniform("uCameraPos", campos);
+	shader->setUniform("modeltoworld", m2w);
+	
 	for (int i = 0; i < light_size; i++)
 	{		
 		shader->setUniform("uLight[" + std::to_string(i) + "].type", GetType(all_lights[i].type));
-		shader->setUniform("uLight[" + std::to_string(i) + "].ambient", all_lights[i].ambientColor);
-		shader->setUniform("uLight[" + std::to_string(i) + "].diffuse", all_lights[i].diffuseColor);
-		shader->setUniform("uLight[" + std::to_string(i) + "].specular",all_lights[i].specularColor);
-		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);		
+		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
+		for(int j=0;j<allObjects.size();j++)
+		{
+			if (j == 13)//せせせせせせせ
+			{
+				all_lights[i].pos = allObjects[j]->transf.pos;
+			}
+		}
+		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
+
+		shader->setUniform("uLight[" + std::to_string(i) + "].att", all_lights[i].att);
+		shader->setUniform("uLight[" + std::to_string(i) + "].dir", all_lights[i].dir);
+
+		shader->setUniform("uLight[" + std::to_string(i) + "].inner", all_lights[i].inner);
+		shader->setUniform("uLight[" + std::to_string(i) + "].outer", all_lights[i].outer);
+		shader->setUniform("uLight[" + std::to_string(i) + "].falloff", all_lights[i].falloff);
 	}
 
 	CS300Parser::MaterialParameters mp;	
-	shader->setUniform("material.ambient",  mp.ambient);
-	shader->setUniform("material.diffuse",  mp.diffuse);
-	shader->setUniform("material.specular", mp.specular);
-	shader->setUniform("material.shininess",mp.shininess);
+	shader->setUniform("mp_ambient",  mp.ambient);
+	shader->setUniform("mp_diffuse",  mp.diffuse);
+	shader->setUniform("mp_specular", mp.specular);
+	shader->setUniform("mp_shininess",mp.shininess);
 
 
 	//draw
@@ -342,13 +347,46 @@ void Level::Render(Model* obj)
 	glBindVertexArray(0);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void Level::RenderNormal(Model* _obj)
 {	
 	glBindBuffer(GL_ARRAY_BUFFER, _obj->normal_VBO);
-	glBindVertexArray(_obj->normal_VAO);
+	glBindVertexArray(_obj->normal_VAO);	
 
 	glm::mat4x4 m2w = _obj->ComputeMatrix();
-	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);		
+	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);
 	glDrawArrays(GL_LINES, 0, _obj->points.size() *2);	
 }
 
@@ -363,4 +401,103 @@ Level::~Level()
 		delete m;
 
 	allObjects.clear();
+}
+
+
+
+
+
+
+
+
+
+void Level::Cleanup()
+{
+	// Clean up
+	glfwDestroyWindow(window);
+	glfwTerminate();
+
+	DeletePtr();
+}
+
+Level* Level::GetPtr()
+{
+	if (!ptr)
+		ptr = new Level;
+	return ptr;
+}
+
+void Level::DeletePtr()
+{
+	if (ptr)
+	{
+		delete ptr;
+	}
+
+	ptr = nullptr;
+}
+
+#include <fstream>
+#include <sstream>
+
+void Level::ReloadShaderProgram()
+{
+	glUseProgram(0);
+
+	if (shader)
+		delete shader;
+
+	std::stringstream v;
+	std::stringstream f;
+
+	std::ifstream file("data/shaders/vert.vert");
+
+	if (file.is_open())
+	{
+		v << file.rdbuf();
+	}
+
+	file.close();
+	file.open("data/shaders/frag.frag");
+	f << file.rdbuf();
+	file.close();
+
+	shader = new cg::Program(v.str().c_str(), f.str().c_str());
+}
+
+
+
+
+
+
+void Level::RotateCamY(float angle)
+{
+	cam.camPos = cam.camTarget - glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), cam.camUp) * glm::vec4(cam.camTarget - cam.camPos, 1));
+}
+
+void Level::RotateCamX(float angle)
+{
+	glm::vec3 right = glm::cross(cam.camUp, cam.camPos - cam.camTarget);
+	glm::vec3 rotVec = glm::vec3(glm::rotate(glm::identity<glm::mat4>(), glm::radians(-angle), right) * glm::vec4(cam.camTarget - cam.camPos, 1));
+
+	if (abs(rotVec.z) > 0.1f)
+		cam.camPos = cam.camTarget - rotVec;
+}
+
+void Level::RotateCamZ(float angle)
+{
+	cam.camPos += angle * (cam.camTarget - cam.camPos);
+}
+
+
+
+Model* Level::FindModel(std::string _name)
+{
+	int size = allObjects.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (allObjects[i]->transf.name == _name)
+			return allObjects[i];
+	}
+	return nullptr;
 }

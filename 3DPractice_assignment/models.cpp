@@ -5,7 +5,7 @@
 
 #include <gtc/matrix_transform.hpp>
 
-
+#include "Level.h"
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include "../extern/tiny_obj_loader.h"
 
@@ -140,11 +140,16 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 
 		normal_vertices.push_back(start);
 		normal_vertices.push_back(end);
-	}
+	}	
+	
+	
+	Level::GetPtr()->calculate_normal_avg(this);
 
 	//Sanity Check
 	if (vertices.size() == 0)
 		return;
+
+	this->normal_vertices;
 
 	//Gen VBO
 	glGenBuffers(1, &VBO);
@@ -171,8 +176,8 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	glBindBuffer(GL_ARRAY_BUFFER, normal_VBO);
 	glGenVertexArrays(1, &normal_VAO);
 	glBindVertexArray(normal_VAO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
 	/////////////////
 
 
@@ -191,6 +196,12 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	//Assign Normals
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+
+
+
+
+
 
 	//Assign UV
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
@@ -213,7 +224,7 @@ void Model::ModelUpdate(float dt)
 	t += dt;
 	transf.pos = transf.StartPos;
 	for (int i = 0; i < transf.anims.size(); i++)
-		transf.pos = transf.anims[i].Update(transf.pos, t);
+		transf.pos = transf.anims[i].Update(transf.pos, t);	
 }
 
 //TODO:
@@ -244,7 +255,7 @@ void Model::CreateModelPlane()
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}
-	};		
+	};			
 
 }
 
@@ -367,9 +378,6 @@ void Model::CreateModelCube()
 		{0, 1 }
 	};
 
-	
-
-	
 }
 
 void Model::CreateModelCone(int slices)

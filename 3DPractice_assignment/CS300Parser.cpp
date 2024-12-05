@@ -185,15 +185,6 @@ void CS300Parser::LoadDataFromFile(const char * filename)
                 lights.back().col = col;
             }
         }
-        else if (id == "ambient")
-        {
-            float ambient = ReadFloat(inFile);
-
-            if (lights.size() > 0)
-            {
-                lights.back().amb = ambient;
-            }
-        }
         else if (id == "lightType")
         {
             std::string type;
@@ -230,24 +221,6 @@ void CS300Parser::LoadDataFromFile(const char * filename)
                 lights.back().inner   = spotAtt.x;
                 lights.back().outer   = spotAtt.y;
                 lights.back().falloff = spotAtt.z;
-            }
-        }
-        else if (id == "bias")
-        {
-            float bias = ReadFloat(inFile);
-
-            if (lights.size() > 0)
-            {
-                lights.back().bias = bias;
-            }
-        }
-        else if (id == "pcf")
-        {
-            int pcf = ReadInt(inFile);
-
-            if (lights.size() > 0)
-            {
-                lights.back().pcf = pcf;
             }
         }
         else if (id == "envMap")

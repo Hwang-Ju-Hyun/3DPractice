@@ -12,6 +12,7 @@ struct Model
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indicies;
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec3> normals_avg;
 	std::vector<glm::vec2> UV;
 
 	std::vector<float> vertices;

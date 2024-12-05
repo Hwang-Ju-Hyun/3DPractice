@@ -5,46 +5,36 @@ in vec2 UV;
 uniform sampler2D myTextureSampler;
 uniform bool hasTexture;
 uniform bool normal;
+uniform bool LightColorOn;
 in vec3 Normal;
 
-struct MaterialParmeters
-{
-	vec4 emission;
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
-	float shininess;
-};
+uniform vec3 mp_ambient;
+uniform vec3 mp_diffuse;
+uniform vec3 mp_specular;
+uniform float mp_shininess;
+
 
 struct Light
 {
-    int  type;    
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    
-	 float     amb     ;
-     float     inner   ;
-     float     outer   ;
-     float     falloff ;
-     float     bias    ;
-     unsigned  pcf     
+    int  type;
+    vec3 col;
+	vec3 positionWorld;
 
-    vec3 position;
-    float spotExponent;
-	float spotCutoff; 
-	float spotCosCutoff; // (range: [1.0,0.0], -1.0)
-	float constantAttenuation;
-	float linearAttenuation;
-	float quadraticAttenuation;
+	vec3 att;
+	vec3 dir;	    	
+	
+    float     inner;
+    float     outer;
+    float     falloff;       
 };
+ 
 
-uniform MaterialParmeters material;
 uniform int   uLightNum;
 uniform Light uLight[5];
+  
 uniform vec3 uCameraPos;
-
-
+ 
+ 
 in vec2 fragTexCoord;
 // 세계 공간에서의 법선
 in vec3 fragNormal;
@@ -53,37 +43,75 @@ in vec3 fragWorldPos;
 
 
 void main()
-{   	    
-
-	vec3 N=normalize(fragNormal);
-	vec3 L=normalize(uLight[0].position);
-	vec3 V=normalize(uCameraPos - fragWorldPos);
-	vec3 R = normalize(reflect(-L, N));
-
-
-	
-
-	vec3 Phong = uLight[0].ambient;
-	float NdotL = dot(N, L);
-	if(NdotL > 0)
+{   	 
+	//FragColor=vec4(0.5,0.5,1.0,1.0);
+	//return;
+	vec3 Phong=vec3(0.0f,0.0f,0.0f);
+	for(int i=0;i<uLightNum;i++)
 	{
-		vec3 Diffuse = uLight[0].diffuse * NdotL;
-		vec3 Specular = uLight[0].specular * 
-						pow(max(0.0, dot(R, V)), uLight[0].spotExponent);
-		Phong += Diffuse + Specular;
-	}	
+		vec3 N=normalize(fragNormal);   // 법선 벡터
+		vec3 L=normalize(-uLight[i].dir);//표면에서 광원으로 향하는 벡터
+		vec3 V=normalize(uCameraPos - fragWorldPos);//표면에서 카메라로 향하는 벡터
+		vec3 R = normalize(reflect(-L, N)); //reflector 아마 specular에서 쓰일듯		
 
-
-	if(normal)
-	{
-		FragColor=vec4(1.0,0.0,0.0,1.0);
-	}
-	else
-	{
-		if(hasTexture)		
-			texture(myTextureSampler, UV) * vec4(Phong,1.0f);					
+		float NdotL = dot(N, L);				
+		vec3 Diffuse  = uLight[i].col     *    vec3(UV,0)  *     max(NdotL,0.0);
+		vec3 Specular=vec3(1.f,1.f,1.f);
+		vec3 light_Direction=vec3(0.f,0.f,0.f);
+		if(uLight[i].type==1)
+		{
+			 light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
+			 vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
+			 float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
+			 Specular=uLight[i].col*mp_shininess*sp;
+		}				
 		else
-			FragColor = vec4(UV,0, 1.0);
+		{
+			 Specular= uLight[i].col     *    mp_specular    *  
+								pow(max(dot(R,V),0.0),mp_shininess);
+		}
+		float dist=distance(fragWorldPos,uLight[i].positionWorld);
+		float att=min(1.0/(uLight[i].att.x+uLight[i].att.y*dist+uLight[i].att.z*dist*dist),1);
+		
+
+		vec3 Ambient  = uLight[i].col     *     mp_ambient.xyz;
+		if(uLight[i].type==3)
+		{
+			vec3 D = normalize(uLight[i].dir);
+			vec3 lightToTarget=normalize(fragWorldPos-uLight[i].positionWorld);
+			float LdotD=dot(lightToTarget,D);
+			float EffectAngle= LdotD/(length(lightToTarget)*length(D));
+		
+			float SpotLightEffect=pow(EffectAngle-cos(uLight[i].outer)/cos(uLight[i].inner)-cos(uLight[i].outer),uLight[i].falloff);
+			Phong += Ambient+att*(SpotLightEffect*(Diffuse + Specular));
+		}
+		else
+		{
+			Phong += Ambient+att*(Diffuse + Specular);
+		}
+		
+		
 	}
+	FragColor=vec4(Phong,1.0);
+	//FragColor = vec4((normalize(fragNormal)+vec3(1,1,1))/2,1.0f);
+	//if(normal)
+	//{
+	//	FragColor=vec4(1.0,0.0,0.0,1.0);
+	//}
+	//else
+	//{
+	//	if(LightColorOn)
+	//	{
+	//		FragColor=vec4(1.0,1.0,1.0,1.0);			
+	//	}
+	//	else
+	//	{
+	//		if(hasTexture)		
+	//			FragColor=texture(myTextureSampler, UV) * vec4(Phong,1.0f);
+	//		else
+	//			FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);
+	//	}
+	//	
+	//}
 	
 }
