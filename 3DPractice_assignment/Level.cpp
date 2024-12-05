@@ -64,7 +64,7 @@ int Level::Initialize()
 	{
 		light.obj.sca = { 1.f,1.f,1.f };
 		allObjects.push_back(new Model(light.obj));		
-		if (light.type == "SPOT")
+		if (light.type == "SPOT"||light.type=="POINT")
 		{
 			light.startPos = light.pos;
 			light.obj.StartPos = light.startPos;
@@ -308,13 +308,15 @@ void Level::Render(Model* obj)
 	{		
 		shader->setUniform("uLight[" + std::to_string(i) + "].type", GetType(all_lights[i].type));
 		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
-		for(int j=0;j<allObjects.size();j++)
+		for (int j = 0; j < allObjects.size(); j++)
 		{
 			if (j == 13)//せせせせせせせ
 			{
 				all_lights[i].pos = allObjects[j]->transf.pos;
 			}
 		}
+				
+
 		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
 
 		shader->setUniform("uLight[" + std::to_string(i) + "].att", all_lights[i].att);

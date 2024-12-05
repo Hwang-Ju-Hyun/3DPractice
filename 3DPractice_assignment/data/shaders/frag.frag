@@ -56,20 +56,34 @@ void main()
 
 		float NdotL = dot(N, L);				
 		vec3 Diffuse  = uLight[i].col     *    vec3(UV,0)  *     max(NdotL,0.0);
-		vec3 Specular=vec3(1.f,1.f,1.f);
+		vec3 Specular=vec3(0.f,0.f,0.f);
 		vec3 light_Direction=vec3(0.f,0.f,0.f);
-		if(uLight[i].type==1)
+		//if(uLight[i].type==3)
+		//{
+		//	 light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
+		//	 vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
+		//	 float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
+		//	 Specular=uLight[i].col*mp_shininess*sp;
+		//}				
+		//else
+		//{
+		//	 Specular= uLight[i].col     *    mp_specular    *  
+		//						pow(max(dot(R,V),0.0),mp_shininess);
+		//}
+		if(uLight[i].type == 1)
 		{
-			 light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
-			 vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
-			 float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
-			 Specular=uLight[i].col*mp_shininess*sp;
-		}				
+			light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
+		}
 		else
 		{
-			 Specular= uLight[i].col     *    mp_specular    *  
-								pow(max(dot(R,V),0.0),mp_shininess);
+			light_Direction=-uLight[i].dir;
 		}
+		
+		vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
+		float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
+		Specular=uLight[i].col*mp_shininess*sp;
+
+
 		float dist=distance(fragWorldPos,uLight[i].positionWorld);
 		float att=min(1.0/(uLight[i].att.x+uLight[i].att.y*dist+uLight[i].att.z*dist*dist),1);
 		
@@ -83,11 +97,11 @@ void main()
 			float EffectAngle= LdotD/(length(lightToTarget)*length(D));
 		
 			float SpotLightEffect=pow(EffectAngle-cos(uLight[i].outer)/cos(uLight[i].inner)-cos(uLight[i].outer),uLight[i].falloff);
-			Phong += Ambient+att*(SpotLightEffect*(Diffuse + Specular));
+			Phong += Ambient+(SpotLightEffect*(Diffuse + Specular));
 		}
 		else
 		{
-			Phong += Ambient+att*(Diffuse + Specular);
+			Phong += Ambient+(Diffuse + Specular);
 		}
 		
 		
@@ -112,6 +126,5 @@ void main()
 	//			FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);
 	//	}
 	//	
-	//}
-	
+	//}	
 }

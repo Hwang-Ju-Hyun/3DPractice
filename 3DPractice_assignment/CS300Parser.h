@@ -67,7 +67,7 @@ class CS300Parser
         glm::vec3 ambient = {0.f,0.f,0.f  };//coefficient ambient
         glm::vec3 diffuse = { 1.f,1.f,1.f,};//텍스쳐 칼라
         glm::vec3 specular = { 1.f,1.f,1.f };//coefficient  specular
-        float shininess = 55.f; //ns in specular
+        float shininess = 65.f; //ns in specular
     };
     
 
