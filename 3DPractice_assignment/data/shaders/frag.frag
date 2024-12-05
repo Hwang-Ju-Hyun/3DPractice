@@ -76,7 +76,7 @@ void main()
 		}
 		else
 		{
-			light_Direction=-uLight[i].dir;
+			light_Direction=L;
 		}
 		
 		vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
