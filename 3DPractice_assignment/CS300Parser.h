@@ -50,6 +50,7 @@ class CS300Parser
         glm::vec3 dir;//빛의 방향(SPOT,DIRECTIONAL)
         glm::vec3 col;//모든 intensity from light
         glm::vec3 att;     //c1,c2,c3
+        float amb;
         float     inner   = 0.0f;
         float     outer   = 30.0f;
         float     falloff = 1.0f;
@@ -64,13 +65,11 @@ class CS300Parser
 
     struct MaterialParameters
     {
-        glm::vec3 ambient = {0.f,0.f,0.f  };//coefficient ambient
+        glm::vec3 ambient = {1.f,1.f,1.f  };//coefficient ambient
         glm::vec3 diffuse = { 1.f,1.f,1.f,};//텍스쳐 칼라
         glm::vec3 specular = { 1.f,1.f,1.f };//coefficient  specular
         float shininess = 65.f; //ns in specular
     };
-    
-
   private:
     static float     ReadFloat(std::ifstream & f);
     static int       ReadInt(std::ifstream & f);

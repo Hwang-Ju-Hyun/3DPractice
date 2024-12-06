@@ -310,7 +310,7 @@ void Level::Render(Model* obj)
 		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
 		for (int j = 0; j < allObjects.size(); j++)
 		{
-			if (j == 13)//せせせせせせせ
+			if (j == 12)//せせせせせせせ
 			{
 				all_lights[i].pos = allObjects[j]->transf.pos;
 			}
@@ -318,7 +318,7 @@ void Level::Render(Model* obj)
 				
 
 		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
-
+		shader->setUniform("uLight[" + std::to_string(i) + "].amb", all_lights[i].amb);
 		shader->setUniform("uLight[" + std::to_string(i) + "].att", all_lights[i].att);
 		shader->setUniform("uLight[" + std::to_string(i) + "].dir", all_lights[i].dir);
 

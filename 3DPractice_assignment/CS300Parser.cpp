@@ -185,6 +185,15 @@ void CS300Parser::LoadDataFromFile(const char * filename)
                 lights.back().col = col;
             }
         }
+        else if (id == "ambient")
+        {
+            float ambient = ReadFloat(inFile);
+
+            if (lights.size() > 0)
+            {
+                lights.back().amb = ambient;
+            }
+            }
         else if (id == "lightType")
         {
             std::string type;
