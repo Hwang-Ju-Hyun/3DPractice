@@ -84,14 +84,14 @@ void main()
 
 
 		///assignment3			
-		vec3 normalMap_norm=normalize(2.0*texture(uNormalMap,UV).xyz-0.1);
-		vec3 v_lightTS=tbnMat*normalize(light_Direction);
-		vec3 v_viewTS=tbnMat*normalize(V);
+		vec3 normalMap_norm=normalize(2.0*texture(uNormalMap,UV).xyz-1.0);
+		vec3 v_lightTS=tbnMat*light_Direction;
+		vec3 v_viewTS=tbnMat*V;
 		vec3 light =normalize(v_lightTS);
 		vec3 view=normalize(v_viewTS);
 
 
-		float diff=max(dot(normalMap_norm,v_lightTS),0.0);
+		float diff=max(dot(normalMap_norm,light),0.0);
 		vec3 Diffuse  = uLight[i].col     *    vec3(UV,0)  *     diff;
 		///assignment3			
 
