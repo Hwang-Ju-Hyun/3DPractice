@@ -58,21 +58,21 @@ shininess 20
 mesh PLANE
 normalMap data/textures/brick_normal_map.png
 
-object plane
+object cube
 translate 0 0 50
 rotation 0 0 0
 scale 30 30 30
 shininess 3
-mesh PLANE
+mesh CUBE
 normalMap data/textures/circles_normal_map.png
 
 #light data
 light
 translate -40 0 50
 color 1 1 1
-lightType SPOT	
+lightType POINT	
 attenuation 0 0.0 0.0005
 orbit 0 0 50
 sinusoidal 0 1.5 40
 ambient 0.2
-normalMap data/textures/brick_normal_map.png
+mesh CUBE   

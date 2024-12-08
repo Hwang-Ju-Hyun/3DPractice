@@ -10,6 +10,7 @@
 #include <chrono>
 #include <vector>
 #include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 Level* Level::ptr = nullptr;
@@ -54,7 +55,7 @@ int Level::Initialize()
 	}
 	for (auto light : parser.lights)
 	{
-		light.obj.sca = { 1.f,1.f,1.f };
+		light.obj.sca = { 15.f,15.f,15.f };
 		allObjects.push_back(new Model(light.obj));		
 		if (light.type == "SPOT"||light.type=="POINT")
 		{
@@ -79,7 +80,7 @@ int Level::Initialize()
 
 	//Shader program
 	ReloadShaderProgram();
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	//glFrontFace(GL_CW);
 
@@ -103,7 +104,7 @@ void Level::LightUpdate(float _dt)
 				light[i].pos=light[i].anims[j].Update(light[i].obj.pos, time);
 			}			
 		}		
-		light[i].obj.sca = { 5.f,5.f,5.f };	
+		light[i].obj.sca = { 15.f,15.f,15.f };	
 	}
 
 	
@@ -127,7 +128,7 @@ void Level::LightUpdate(float _dt)
 
 
 	int idx = 0;
-	for (int i = 12; i < allObjects.size(); i++)
+	for (int i = 7; i < allObjects.size(); i++)
 	{
 		allObjects[i]->transf = light[idx].obj;		
 		idx++;
@@ -271,9 +272,10 @@ void Level::Render(Model* obj)
 	//Send view matrix to the shader
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);	
 
-	glBindTexture(GL_TEXTURE_2D, obj->m_iTextureID);
-	shader->setUniform("normalMap",0);
-	//shader->setUniform("myTextureSampler", 0);	
+	shader->setUniform("uNormalMap", 1);
+	//glActiveTexture(GL_TEXTURE111);
+	//glBindTexture(GL_TEXTURE_2D, m_iTextureID);
+	shader->setUniform("myTextureSampler", 0);	
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
 	
@@ -285,7 +287,6 @@ void Level::Render(Model* obj)
 	{
 		shader->setUniform("LightColorOn", false);
 	}
-	
 
 	std::vector<CS300Parser::Light> all_lights=parser.lights;
 	int light_size = all_lights.size();	
@@ -302,14 +303,10 @@ void Level::Render(Model* obj)
 		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
 		for (int j = 0; j < allObjects.size(); j++)
 		{
-			if (j == 14&&i==2)//せせせせせせせ
+			if (j == 7&&i==0)//せせせせせせせ
 			{
 				all_lights[i].pos = allObjects[j]->transf.pos;				
-			}
-			if (j == 15 && i == 3)//せせせせせせせ
-			{
-				all_lights[i].pos = allObjects[j]->transf.pos;
-			}
+			}			
 		}
 				
 

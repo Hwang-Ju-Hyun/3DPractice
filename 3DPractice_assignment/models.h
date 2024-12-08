@@ -56,11 +56,8 @@ public:
 	}
 public:
 	void Loadcheckboard();
-	void MyLoadTexture(std::string& _path);
+	void MyLoadTexture();
 	unsigned char* m_cData = nullptr;
-	int m_iWidth = 0;
-	int m_iHeight = 0;
-	int m_iNrChannels = 0;
 	unsigned int m_iTextureID=0;
 	float t = 0;
 };
