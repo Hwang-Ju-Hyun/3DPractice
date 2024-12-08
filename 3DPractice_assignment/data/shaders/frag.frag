@@ -2,7 +2,7 @@
 
 out vec4 FragColor;
 in vec2 UV;
-uniform sampler2D myTextureSampler;
+uniform sampler2D myTextureSampler,normalMap;//normal map<-파랑색
 uniform bool hasTexture;
 uniform bool normal;
 uniform bool LightColorOn;
@@ -33,6 +33,7 @@ uniform int   uLightNum;
 uniform Light uLight[5];
   
 uniform vec3 uCameraPos;
+
  
  
 in vec2 fragTexCoord;
@@ -41,6 +42,7 @@ in vec3 fragNormal;
 // 세계 공간에서의 위치
 in vec3 fragWorldPos;
 
+in mat3 tbnMat;//tanget space로 가는 행렬
 
 void main()
 {   	 	
@@ -57,24 +59,9 @@ void main()
 		vec3 Specular=vec3(0.f,0.f,0.f);
 		vec3 light_Direction=vec3(0.f,0.f,0.f);
 
+	
 
-
-		//if(uLight[i].type==3)
-		//{
-		//	 light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
-		//	 vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
-		//	 float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
-		//	 Specular=uLight[i].col*mp_shininess*sp;
-		//}				
-		//else
-		//{
-		//	 Specular= uLight[i].col     *    mp_specular    *  
-		//						pow(max(dot(R,V),0.0),mp_shininess);
-		//}
-
-
-
-
+		
 
 		if(uLight[i].type == 1)
 		{
@@ -88,7 +75,7 @@ void main()
 		
 		vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
 		float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
-		Specular=uLight[i].col*mp_shininess*sp;
+		Specular=uLight[i].col*sp;
 
 
 		float dist=distance(fragWorldPos,uLight[i].positionWorld);
@@ -97,6 +84,14 @@ void main()
 		vec3 Ambient  = uLight[i].col * uLight[i].amb  *    vec3(UV,0);
 
 
+		///assignment3			
+		vec3 normalMap_norm=normalize(2.0*texture(normalMap,fragTexCoord).xyz-1.0);
+		vec3 v_lightTS=tbnMat*normalize(light_Direction);
+		vec3 v_viewTS=tbnMat*normalize(V);
+		vec3 light =normalize(v_lightTS);
+		vec3 view=normalize(v_viewTS);
+		///assignment3			
+
 
 		if(uLight[i].type==3)//SPOT
 		{
@@ -104,15 +99,20 @@ void main()
 			vec3 lightToTarget=normalize(fragWorldPos-uLight[i].positionWorld);
 			float LdotD=dot(lightToTarget,D);
 			float EffectAngle= LdotD/(length(lightToTarget)*length(D));
-		
-			float SpotLightEffect=pow((EffectAngle-cos(radians(uLight[i].outer)))/(cos(radians(uLight[i].inner))-cos(radians(uLight[i].outer))),uLight[i].falloff);
+			
+			float Phi=cos(radians(uLight[i].outer));
+			float Theta=cos(radians(uLight[i].inner));
+				
+			float SpotLightEffect=pow((EffectAngle-Phi)/(Theta-Phi),uLight[i].falloff);
+
 			SpotLightEffect=clamp(SpotLightEffect,0,1);
+			
 			Phong += att*(SpotLightEffect*(Diffuse + Specular));
 		}
 		else if(uLight[i].type==2)// DIR
 		{
 			att=1.f;			
-			Phong += Ambient+att*(Diffuse + Specular);
+			Phong += att*(Diffuse + Specular);
 		}
 		else //POINT
 		{
@@ -121,8 +121,8 @@ void main()
 				
 		
 	}
-	FragColor=vec4(Phong,1.0);
-	//FragColor = vec4((normalize(fragNormal)+vec3(1,1,1))/2,1.0f);
+	//FragColor=vec4(fragNormal,1);
+	FragColor = vec4((normalize(fragNormal)+vec3(1,1,1))/2,1.0f);
 	//if(normal)
 	//{
 	//	FragColor=vec4(1.0,0.0,0.0,1.0);

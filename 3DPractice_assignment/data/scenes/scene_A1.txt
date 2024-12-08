@@ -88,11 +88,39 @@ sinusoidal 0 3 5
 orbit 0 -15 50
 
 #light data
+light
+translate 50 0 55
+color 1 1 1
+lightType DIR	
+direction -1 0 0
+mesh data/meshes/sphere_20_face.obj    
 
 light
 translate -50 0 55
 color 1 1 1
 lightType POINT	
 attenuation 0 0.0 0.01
-#sinusoidal 0 1 20
+sinusoidal 0 1 20
 ambient 0.2
+mesh data/meshes/sphere_20_face.obj    
+
+light
+translate 50 30 50
+color 1 1 1
+lightType SPOT
+attenuation 0 0.0 0.0	
+direction 0 -1 0
+spotAttenuation 20 80 50
+orbit 0 30 50
+sinusoidal 1 5 10
+mesh data/meshes/sphere_20_face.obj    
+
+light
+translate 10 30 50
+color 1 1 1
+lightType SPOT
+attenuation 0 0.0 0.0	
+direction 0 -1 0
+spotAttenuation 0 10 1
+orbit 0 30 50
+mesh data/meshes/sphere_20_face.obj     

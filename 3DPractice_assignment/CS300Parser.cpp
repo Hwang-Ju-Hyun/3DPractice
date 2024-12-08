@@ -3,21 +3,21 @@
 #include <iostream>
 #include <fstream>
 
-float CS300Parser::ReadFloat(std::ifstream & f)
+float CS300Parser::ReadFloat(std::ifstream& f)
 {
     std::string str;
     f >> str;
     return static_cast<float>(std::atof(str.c_str()));
 }
 
-int CS300Parser::ReadInt(std::ifstream & f)
+int CS300Parser::ReadInt(std::ifstream& f)
 {
     std::string str;
     f >> str;
     return std::atoi(str.c_str());
 }
 
-glm::vec3 CS300Parser::ReadVec3(std::ifstream & f)
+glm::vec3 CS300Parser::ReadVec3(std::ifstream& f)
 {
     float x = ReadFloat(f);
     float y = ReadFloat(f);
@@ -26,7 +26,7 @@ glm::vec3 CS300Parser::ReadVec3(std::ifstream & f)
     return glm::vec3(x, y, z);
 }
 
-void CS300Parser::LoadDataFromFile(const char * filename)
+void CS300Parser::LoadDataFromFile(const char* filename)
 {
     std::ifstream inFile(filename);
 
@@ -141,14 +141,10 @@ void CS300Parser::LoadDataFromFile(const char * filename)
         else if (id == "mesh")
         {
             std::string mesh;
-            inFile >> mesh;            
-            if (last == LastAdded::OBJECT)
+            inFile >> mesh;
+            if (objects.size() > 0)
             {
                 objects.back().mesh = mesh;
-            }
-            else if (last == LastAdded::LIGHT)
-            {              
-                lights.back().obj.mesh = mesh;
             }
         }
         else if (id == "normalMap")
@@ -193,7 +189,7 @@ void CS300Parser::LoadDataFromFile(const char * filename)
             {
                 lights.back().amb = ambient;
             }
-            }
+        }
         else if (id == "lightType")
         {
             std::string type;
@@ -227,11 +223,12 @@ void CS300Parser::LoadDataFromFile(const char * filename)
 
             if (lights.size() > 0)
             {
-                lights.back().inner   = spotAtt.x;
-                lights.back().outer   = spotAtt.y;
+                lights.back().inner = spotAtt.x;
+                lights.back().outer = spotAtt.y;
                 lights.back().falloff = spotAtt.z;
             }
         }
+        
         else if (id == "envMap")
         {
             for (size_t i = 0; i < environmentMap.size(); i++)
@@ -252,7 +249,7 @@ void CS300Parser::LoadDataFromFile(const char * filename)
                 }
 
                 objects.back().reflector = true;
-                objects.back().ior       = ior;
+                objects.back().ior = ior;
             }
         }
         else if (Animations::NameToUpdater.find(id) != Animations::NameToUpdater.end())

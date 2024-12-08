@@ -10,7 +10,7 @@
 #include <chrono>
 #include <vector>
 #include <iostream>
-
+#include "stb_image.h"
 
 Level* Level::ptr = nullptr;
 
@@ -44,15 +44,7 @@ int Level::Initialize()
 	glfwSetKeyCallback(window, Controls::keyCallback);
 
 	//Load Scene	
-	parser.LoadDataFromFile("data/scenes/scene_A1.txt");	
-		
-
-	//int light_size = parser.lights.size();
-	/*for (int i = 0; i < light_size; i++)
-	{
-		int time = glfwGetTime();
-		parser.lights[i].anims[i].Update(parser.lights[i].pos, time * 0.1f);
-	}*/
+	parser.LoadDataFromFile("data/scenes/scene_A2.txt");	
 
 
 	//Convert from parser->obj to Model
@@ -279,11 +271,11 @@ void Level::Render(Model* obj)
 	//Send view matrix to the shader
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);	
 
-	glBindTexture(GL_TEXTURE_2D, obj->textureID);
-	shader->setUniform("myTextureSampler", 0);	
+	glBindTexture(GL_TEXTURE_2D, obj->m_iTextureID);
+	shader->setUniform("normalMap",0);
+	//shader->setUniform("myTextureSampler", 0);	
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
-
 	
 	if (obj->transf.name == "")
 	{
@@ -310,7 +302,11 @@ void Level::Render(Model* obj)
 		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
 		for (int j = 0; j < allObjects.size(); j++)
 		{
-			if (j == 12)//せせせせせせせ
+			if (j == 14&&i==2)//せせせせせせせ
+			{
+				all_lights[i].pos = allObjects[j]->transf.pos;				
+			}
+			if (j == 15 && i == 3)//せせせせせせせ
 			{
 				all_lights[i].pos = allObjects[j]->transf.pos;
 			}

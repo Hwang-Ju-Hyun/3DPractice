@@ -1,14 +1,15 @@
 #pragma once
 
 #include "CS300Parser.h"
-
+#include "stb_image.h"
 struct Model
 {
 	CS300Parser::Transform transf;
 
 	//TODO
 	glm::mat4x4 ComputeMatrix();
-
+	std::vector<glm::vec3>tangents;
+	std::vector<glm::vec3>bitangents;
 	std::vector<glm::vec3> points;
 	std::vector<unsigned int> indicies;
 	std::vector<glm::vec3> normals;
@@ -55,7 +56,11 @@ public:
 	}
 public:
 	void Loadcheckboard();
-
+	void MyLoadTexture(std::string& _path);
+	unsigned char* m_cData = nullptr;
+	int m_iWidth = 0;
+	int m_iHeight = 0;
+	int m_iNrChannels = 0;
+	unsigned int m_iTextureID=0;
 	float t = 0;
-
 };

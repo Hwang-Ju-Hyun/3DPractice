@@ -98,16 +98,16 @@ void Model::LoadModel()
 			}
 		}
 	}
-
 }
 
+#include "stb_image.h"
 Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO(0), VAO(0)
 {
 	transf.StartPos = transf.pos;
-
 	//load points
 	LoadModel();
-	
+	std::string path = "../3DPractice_assignment/data/textures/brick_normal_map.png";
+	//MyLoadTexture(path);
 	Loadcheckboard();
 
 	int s = points.size();	
@@ -128,6 +128,17 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 		//UV
 		vertices.push_back(UV[i].x);
 		vertices.push_back(UV[i].y);
+		
+		if (this->transf.anims.size()==0)
+		{
+			vertices.push_back(tangents[i].x);
+			vertices.push_back(tangents[i].y);
+			vertices.push_back(tangents[i].z);
+
+			vertices.push_back(bitangents[i].x);
+			vertices.push_back(bitangents[i].y);
+			vertices.push_back(bitangents[i].z);
+		}		
 	}	
 
 	//normal vector
@@ -166,7 +177,7 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	//Assign Coordinates	
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 
@@ -184,17 +195,17 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 
 
 	//My EBO
-	if (  this->transf.name == "cylinder" || this->transf.name == "sphere")
+	/*if (  this->transf.name == "cylinder" || this->transf.name == "sphere")
 	{
 		glGenBuffers(1, &EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indicies.size(), &indicies[0], GL_STATIC_DRAW);
-	}	
+	}	*/
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//Assign Normals
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 
@@ -204,9 +215,18 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 
 
 	//Assign UV
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6*sizeof(float)));
 	glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
+
+
+	//Assign Tangents
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+	
+	//Assign biTangents
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+	glEnableVertexAttribArray(4);
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -255,7 +275,37 @@ void Model::CreateModelPlane()
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}
-	};			
+	};	
+	this;
+	for (int i = 0; i < points.size(); i += 3) // 삼각형 단위로 반복
+	{		
+		glm::vec3 P0 = points[i + 0];
+		glm::vec3 P1 = points[i + 1];
+		glm::vec3 P2 = points[i + 2];
+	
+		glm::vec2 UV0 = UV[i + 0];
+		glm::vec2 UV1 = UV[i + 1];
+		glm::vec2 UV2 = UV[i + 2];
+		
+		glm::vec3 V1 = P1 - P0;
+		glm::vec3 V2 = P2 - P0;
+		
+		glm::vec2 Tc1 = UV1 - UV0;
+		glm::vec2 Tc2 = UV2 - UV0;
+				
+
+		glm::vec3 tan =  (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (Tc2.y * V1 - Tc1.y * V2);  
+		glm::vec3 bitan =  (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (-Tc2.x * V1 + Tc1.x * V2); 
+		
+		
+		tangents.push_back(tan);
+		tangents.push_back(tan);
+		tangents.push_back(tan);
+
+		bitangents.push_back(bitan);
+		bitangents.push_back(bitan);
+		bitangents.push_back(bitan);
+	}
 
 }
 
@@ -722,4 +772,40 @@ void Model::Loadcheckboard()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+
+	delete []data;
+}
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+void Model::MyLoadTexture(std::string& _path)
+{
+	m_cData = stbi_load(_path.c_str(), &m_iWidth, &m_iHeight, &m_iNrChannels, 0);
+	if (!m_cData)
+	{
+		std::cout << "Error : Can't load texture " << _path << std::endl;
+		return;
+	}
+	glGenTextures(1, &m_iTextureID);
+	glBindTexture(GL_TEXTURE_2D, m_iTextureID);
+
+	if (m_cData)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_iWidth, m_iHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, m_cData);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	// 텍스처 wrapping/filtering 옵션 설정(현재 바인딩된 텍스처 객체에 대해)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	
+	stbi_image_free(m_cData);
 }
