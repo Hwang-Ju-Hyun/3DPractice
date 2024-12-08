@@ -105,7 +105,7 @@ namespace cg
         GLuint shaderHandle = glCreateShader(type);
 
         glShaderSource(shaderHandle, 1, &code, NULL);
-
+        ]
         // Compile the shader
         glCompileShader(shaderHandle);
 

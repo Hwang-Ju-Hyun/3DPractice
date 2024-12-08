@@ -80,7 +80,7 @@ int Level::Initialize()
 
 	//Shader program
 	ReloadShaderProgram();
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	//glFrontFace(GL_CW);
 
@@ -274,7 +274,7 @@ void Level::Render(Model* obj)
 
 	shader->setUniform("uNormalMap", 1);
 	//glActiveTexture(GL_TEXTURE111);
-	//glBindTexture(GL_TEXTURE_2D, m_iTextureID);
+
 	shader->setUniform("myTextureSampler", 0);	
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
@@ -295,8 +295,8 @@ void Level::Render(Model* obj)
 	glm::vec3 camdir = glm::normalize(Level::GetPtr()->cam.camPos) - (Level::GetPtr()->cam.camTarget);
 	glm::vec3 campos = (Level::GetPtr()->cam.camPos);
 	shader->setUniform("uCameraPos", campos);
-	shader->setUniform("modeltoworld", m2w);
-	
+	shader->setUniform("modeltoworld", m2w);	
+
 	for (int i = 0; i < light_size; i++)
 	{		
 		shader->setUniform("uLight[" + std::to_string(i) + "].type", GetType(all_lights[i].type));
@@ -306,7 +306,9 @@ void Level::Render(Model* obj)
 			if (j == 7&&i==0)//せせせせせせせ
 			{
 				all_lights[i].pos = allObjects[j]->transf.pos;				
-			}			
+				int a = 0;
+			}	
+			
 		}
 				
 

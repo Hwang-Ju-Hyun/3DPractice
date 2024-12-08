@@ -49,51 +49,37 @@ in mat3 tbnMat;//tanget space로 가는 행렬
 void main()
 {   	 	
 	vec3 Phong=vec3(0.0f,0.0f,0.0f);
+	vec3 normalMap_norm=normalize(2.0*texture(uNormalMap,fragTexCoord).xyz-1.0);
 	for(int i=0;i<uLightNum;i++)
 	{
-		vec3 N=normalize(fragNormal);   // 법선 벡터
-		vec3 L=normalize(-uLight[i].dir);//표면에서 광원으로 향하는 벡터
-		vec3 V=normalize(uCameraPos - fragWorldPos);//표면에서 카메라로 향하는 벡터
+		vec3 N=(fragNormal);   // 법선 벡터
+		vec3 L=normalize(vec3(uLight[i].positionWorld) - fragWorldPos);//표면에서 광원으로 향하는 벡터
+		vec3 light_Direction=L;
+		vec3 V=(uCameraPos - fragWorldPos);//표면에서 카메라로 향하는 벡터
 		vec3 R = normalize(reflect(-L, N)); //reflector 아마 specular에서 쓰일듯		
 
-		float NdotL = dot(N, L);						
-		vec3 Specular=vec3(0.f,0.f,0.f);
-		vec3 light_Direction=vec3(0.f,0.f,0.f);
-
-	
-		
-		//if(uLight[i].type == 1)
-		//{
-		//	light_Direction=normalize(uLight[i].positionWorld-fragWorldPos);
-		//}
-		//else
-		//{
-		//	light_Direction=L;
-		//}
-		light_Direction=L;
-		
-		vec3 reflection=2.0 * (dot(N, light_Direction))* N - light_Direction;
-		float sp = pow(max(dot(reflection, V), 0.0), mp_shininess);
-		Specular=uLight[i].col*sp;
-
-
-		float dist=distance(fragWorldPos,uLight[i].positionWorld);
-		float att=min(1.0/(uLight[i].att.x+uLight[i].att.y*dist+uLight[i].att.z*dist*dist),1);		
-
-		vec3 Ambient  = uLight[i].col * uLight[i].amb  *    vec3(UV,0);
-
-
-		///assignment3			
-		vec3 normalMap_norm=normalize(2.0*texture(uNormalMap,UV).xyz-1.0);
+		float NdotL = dot(N, L);														
+								
 		vec3 v_lightTS=tbnMat*light_Direction;
-		vec3 v_viewTS=tbnMat*V;
+		vec3 v_viewTS=(tbnMat*V);
 		vec3 light =normalize(v_lightTS);
 		vec3 view=normalize(v_viewTS);
 
 
+		//Att | Ambient
+		float dist=length(vec3(uLight[i].positionWorld)-fragWorldPos);
+		float att=min(1.0f/(uLight[i].att.x+(uLight[i].att.y*dist)+(uLight[i].att.z*dist*dist)),1.0f);		
+		vec3 Ambient  =mp_ambient* uLight[i].col * uLight[i].amb  *    vec3(UV,0);
+
+		//Diffuse
 		float diff=max(dot(normalMap_norm,light),0.0);
 		vec3 Diffuse  = uLight[i].col     *    vec3(UV,0)  *     diff;
-		///assignment3			
+
+
+		//Specular
+		vec3 reflection=2.0f *dot(normalMap_norm, light)*normalMap_norm - light;
+		float sp = pow(max(dot(reflection, view), 0.0), mp_shininess);
+		vec3 Specular=uLight[i].col*sp;								
 
 
 		if(uLight[i].type==3)//SPOT
@@ -111,21 +97,28 @@ void main()
 			SpotLightEffect=clamp(SpotLightEffect,0,1);
 			
 			Phong += att*(SpotLightEffect*(Diffuse + Specular));
+			FragColor = vec4(UV,0, 1.0);
+			return;
 		}
 		else if(uLight[i].type==2)// DIR
 		{
 			att=1.f;			
 			Phong += att*(Diffuse + Specular);
+			FragColor = vec4(UV,0, 1.0);
+			return;
 		}
 		else //POINT
 		{
-			Phong += Ambient+att*(Diffuse + Specular);
+			Phong += att*(Ambient+Diffuse + Specular);									
+			FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);			
 		}						
-	}	
-	if(hasTexture)		
-		FragColor=texture(myTextureSampler, UV) * vec4(Phong,1.0f);
-	else
-		FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);
+	}		
+
+
+	//if(hasTexture)		
+	//	FragColor=texture(myTextureSampler, UV) * vec4(Phong,1.0f);
+	//else
+	//	FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);
 	//FragColor=vec4(Phong,1.0);
 	//FragColor=vec4(fragNormal,1);
 	//FragColor = vec4((normalize(fragNormal)+vec3(1,1,1))/2,1.0f);
