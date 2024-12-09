@@ -97,13 +97,14 @@ void Model::LoadModel()
 				UV.push_back(tempUV[p.texcoord_index]);
 			}
 		}
-		for (int i = 0; i < points.size(); i += 3) // 삼각형 단위로 반복
+
+		for (int i = 0; i < points.size(); i += 3)
 		{
-			glm::vec3 P0 = points[i + 0];
+			glm::vec3 P0 = points[i];
 			glm::vec3 P1 = points[i + 1];
 			glm::vec3 P2 = points[i + 2];
 
-			glm::vec2 UV0 = UV[i + 0];
+			glm::vec2 UV0 = UV[i];
 			glm::vec2 UV1 = UV[i + 1];
 			glm::vec2 UV2 = UV[i + 2];
 
@@ -114,8 +115,8 @@ void Model::LoadModel()
 			glm::vec2 Tc2 = UV2 - UV0;
 
 
-			glm::vec3 tan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (Tc2.y * V1 - Tc1.y * V2);
-			glm::vec3 bitan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (-Tc2.x * V1 + Tc1.x * V2);
+			glm::vec3 tan = (Tc1.y * V2 - Tc2.y * V1) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
+			glm::vec3 bitan = (Tc2.x * V1 - Tc1.x * V2) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
 
 
 			tangents.push_back(tan);
@@ -126,8 +127,6 @@ void Model::LoadModel()
 			bitangents.push_back(bitan);
 			bitangents.push_back(bitan);
 		}
-
-
 	}
 }
 
@@ -244,7 +243,7 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 	//Assign UV
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6*sizeof(float)));
 	glEnableVertexAttribArray(2);
-	glBindVertexArray(0);
+	
 
 
 	//Assign Tangents
@@ -257,7 +256,7 @@ Model::Model(const CS300Parser::Transform& _transform) : transf(_transform), VBO
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+	glBindVertexArray(0);
 
 	MyLoadTexture();
 }
@@ -266,6 +265,8 @@ Model::~Model()
 {
 	glDeleteBuffers(1, &VBO);
 	glDeleteVertexArrays(1, &VAO);
+
+	//delete texturesID
 }
 
 void Model::ModelUpdate(float dt)
@@ -304,14 +305,14 @@ void Model::CreateModelPlane()
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}, 
 		{0.0f, 0.0f, 1.0f}
-	};	
-	for (int i = 0; i < points.size(); i += 3) // 삼각형 단위로 반복
+	};		
+	for (int i = 0; i < points.size(); i += 3)
 	{
-		glm::vec3 P0 = points[i + 0];
+		glm::vec3 P0 = points[i];
 		glm::vec3 P1 = points[i + 1];
 		glm::vec3 P2 = points[i + 2];
 
-		glm::vec2 UV0 = UV[i + 0];
+		glm::vec2 UV0 = UV[i];
 		glm::vec2 UV1 = UV[i + 1];
 		glm::vec2 UV2 = UV[i + 2];
 
@@ -322,8 +323,8 @@ void Model::CreateModelPlane()
 		glm::vec2 Tc2 = UV2 - UV0;
 
 
-		glm::vec3 tan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (Tc2.y * V1 - Tc1.y * V2);
-		glm::vec3 bitan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (-Tc2.x * V1 + Tc1.x * V2);
+		glm::vec3 tan = (Tc1.y * V2 - Tc2.y * V1) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
+		glm::vec3 bitan = (Tc2.x * V1 - Tc1.x * V2) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
 
 
 		tangents.push_back(tan);
@@ -334,7 +335,6 @@ void Model::CreateModelPlane()
 		bitangents.push_back(bitan);
 		bitangents.push_back(bitan);
 	}
-	
 
 }
 
@@ -456,13 +456,13 @@ void Model::CreateModelCube()
 		{1, 1},
 		{0, 1 }
 	};
-	for (int i = 0; i < points.size(); i += 3) // 삼각형 단위로 반복
+	for (int i = 0; i < points.size(); i += 3) 
 	{
-		glm::vec3 P0 = points[i + 0];
+		glm::vec3 P0 = points[i];
 		glm::vec3 P1 = points[i + 1];
 		glm::vec3 P2 = points[i + 2];
 
-		glm::vec2 UV0 = UV[i + 0];
+		glm::vec2 UV0 = UV[i];
 		glm::vec2 UV1 = UV[i + 1];
 		glm::vec2 UV2 = UV[i + 2];
 
@@ -473,8 +473,8 @@ void Model::CreateModelCube()
 		glm::vec2 Tc2 = UV2 - UV0;
 
 
-		glm::vec3 tan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (Tc2.y * V1 - Tc1.y * V2);
-		glm::vec3 bitan = (Tc1.x * Tc2.y - Tc1.y * Tc2.x) * (-Tc2.x * V1 + Tc1.x * V2);
+		glm::vec3 tan = (Tc1.y * V2 - Tc2.y * V1) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
+		glm::vec3 bitan = (Tc2.x * V1 - Tc1.x * V2) / (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
 
 
 		tangents.push_back(tan);
@@ -502,7 +502,8 @@ void Model::CreateModelCone(int slices)
 		float angle_triangle = glm::radians(i * angle);
 		float x1 = 0.5f * std::cos(angle_triangle);
 		float z1 = 0.5f * std::sin(angle_triangle);
-		points.push_back({ x1,-0.5f,z1});
+		/*points.push_back({ x1,-0.5f,z1});
+		
 		points.push_back({ top });				
 
 		angle_triangle = glm::radians((i + 1) * angle);
@@ -518,11 +519,17 @@ void Model::CreateModelCone(int slices)
 		normals.push_back(-side_normal);
 		normals.push_back(-side_normal);
 		normals.push_back(-side_normal);
+		*/
 
 
+		angle_triangle = glm::radians((i + 1) * angle);
+		float x2 = 0.5f * std::cos(angle_triangle);
+		float z2 = 0.5f * std::sin(angle_triangle);
+		//points.push_back({ x2,-0.5f,z2 });
+		//
 		points.push_back({ x1,-0.5f,z1 });
 		points.push_back({ x2,-0.5f,z2 });
-		points.push_back({ bottom_center });					
+		points.push_back({ bottom_center });				
 
 
 		glm::vec3 bottom_normal = { 0.0f, -1.0f, 0.0f };
@@ -533,34 +540,51 @@ void Model::CreateModelCone(int slices)
 			 
 		float uvx = (float)i / float(slices);
 		float uvx2 = float(i + 1) / float(slices);
-		float uvx1 = (uvx + uvx2) / 2.f;
-		UV.push_back({ uvx,0.f }); UV.push_back({ uvx1,1.f }); UV.push_back({ uvx2,0.f }); 
+		float uvx1 = float((i + i / 2.f) / slices);
+		//UV.push_back({ uvx,0.f }); UV.push_back({ uvx1,1.f }); UV.push_back({ uvx2,0.f }); 
 		UV.push_back({ uvx,0.f }); UV.push_back({ uvx2,0.f }); UV.push_back({ uvx1,0.f });
 		
 	}		
-	//float angle_triangle = glm::radians(i - 2 * angle);
-	//float x1 = 0.5f * std::cos(angle_triangle);
-	//float z1 = 0.5f * std::sin(angle_triangle);
-	//points.push_back({ x1,-0.5f,z1 });
-	//points.push_back({ top });
-	//angle_triangle = glm::radians(i-1 * angle);
 
-	//float x2 = 0.5f * std::cos(angle_triangle);
-	//float z2 = 0.5f * std::sin(angle_triangle);
-	//points.push_back({ x2,-0.5f,z2 });
 
-	//points.push_back({ x1,-0.5f,z1 });
-	//points.push_back({ x2,-0.5f,z2 });
-	//points.push_back({ bottom_center });
+	for (int i = 0; i < points.size(); i += 3)
+	{
+		glm::vec3 P0 = points[i];
+		glm::vec3 P1 = points[i + 1];
+		glm::vec3 P2 = points[i + 2];
 
-	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
-	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
-	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
-	//normals.push_back({ 0.0f, -1.0f, 0.0f }); normals.push_back({ 0.0f, -1.0f, 0.0f });
-	////TODO: UV좌표 수정해야됨
-	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
-	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
-	//UV.push_back({ 0.f,0.f }); UV.push_back({ 0.f,0.f });
+		glm::vec2 UV0 = UV[i];
+		glm::vec2 UV1 = UV[i + 1];
+		glm::vec2 UV2 = UV[i + 2];
+
+		glm::vec3 V1 = P1 - P0;
+		glm::vec3 V2 = P2 - P0;
+
+		glm::vec2 Tc1 = UV1 - UV0;
+		glm::vec2 Tc2 = UV2 - UV0;
+
+		float d1 = (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
+		float d2 = (Tc1.y * Tc2.x - Tc2.y * Tc1.x);
+
+		glm::vec3 tan = { 1.0f,0.f,0.f }; 
+		if(d1)
+			tan = (Tc1.y * V2 - Tc2.y * V1) / d1;
+
+		glm::vec3 bitan = { 0.0f,1.f,0.f }; 
+		
+		if(d1)
+			bitan = (Tc2.x * V1 - Tc1.x * V2) / d2;
+
+
+		tangents.push_back(tan);
+		tangents.push_back(tan);
+		tangents.push_back(tan);
+
+		bitangents.push_back(bitan);
+		bitangents.push_back(bitan);
+		bitangents.push_back(bitan);
+	}
+
 }
 
 void Model::CreateModelCylinder(int slices)
@@ -838,7 +862,7 @@ void Model::Loadcheckboard()
 void Model::MyLoadTexture()
 {
 	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(1);
+	
 
 	m_cData = stbi_load(transf.normalMap.c_str(), &width, &height, &nrChannels, 0);
 	if (stbi_failure_reason())
@@ -849,8 +873,8 @@ void Model::MyLoadTexture()
 		format = GL_RGBA;
 
 	//Normal Texture
-	glGenTextures(1, &m_iTextureID);
-	glBindTexture(GL_TEXTURE_2D, m_iTextureID);
+	glGenTextures(1, &m_iNormalID);
+	glBindTexture(GL_TEXTURE_2D, m_iNormalID);
 	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, m_cData);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -859,4 +883,17 @@ void Model::MyLoadTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	//stbi_image_free(m_cData);
+}
+
+Light::Light(CS300Parser::Light transf)
+{
+	m = new Model(transf.obj);
+	for (int i = 0; i < transf.anims.size(); i++)
+		m->transf.anims.push_back(transf.anims[i]);
+	m->transf.pos = transf.pos;
+	m->transf.StartPos = transf.startPos;
+}
+
+Light::~Light()
+{
 }

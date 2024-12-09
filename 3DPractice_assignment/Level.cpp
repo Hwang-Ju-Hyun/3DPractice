@@ -55,12 +55,18 @@ int Level::Initialize()
 	}
 	for (auto light : parser.lights)
 	{
-		light.obj.sca = { 15.f,15.f,15.f };
-		allObjects.push_back(new Model(light.obj));		
+		light.obj.sca = { 10.f,10.f,10.f };		
+		//TODO: 
+				
+		MyAllLights.push_back(new Light(light));
+		int idx = 0;
+		//allObjects.push_back(new Model(light.obj));		
 		if (light.type == "SPOT"||light.type=="POINT")
-		{
+		{			
 			light.startPos = light.pos;
-			light.obj.StartPos = light.startPos;
+			light.obj.StartPos = light.startPos;			
+			MyAllLights[idx]->m->transf.StartPos = light.pos;
+			idx++;
 		}
 			
 	}	
@@ -80,7 +86,7 @@ int Level::Initialize()
 
 	//Shader program
 	ReloadShaderProgram();
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	//glFrontFace(GL_CW);
 
@@ -92,7 +98,23 @@ int Level::Initialize()
 void Level::LightUpdate(float _dt)
 {
 	time += _dt;
-	std::vector<CS300Parser::Light> light = parser.lights;
+	std::vector<CS300Parser::Light>& light = parser.lights;
+
+	for (int i = 0; i < MyAllLights.size(); i++)
+	{
+		MyAllLights[i]->m->transf.pos = light[i].pos;
+		if (light[i].anims.size() > 0)
+		{
+			for (int j = 0; j < light[i].anims.size(); j++)
+			{
+				MyAllLights[i]->m->transf.pos = light[i].anims[j].Update(MyAllLights[i]->m->transf.pos, time);
+				light[i].pos = light[i].anims[j].Update(MyAllLights[i]->m->transf.pos, time);
+			}
+		}
+		light[i].obj.sca = { 5.f,5.f,5.f };
+	}
+
+
 	for (int i = 0; i < light.size(); i++)
 	{
 		light[i].obj.pos = light[i].pos;
@@ -103,8 +125,7 @@ void Level::LightUpdate(float _dt)
 				light[i].obj.pos = light[i].anims[j].Update(light[i].obj.pos, time);
 				light[i].pos=light[i].anims[j].Update(light[i].obj.pos, time);
 			}			
-		}		
-		light[i].obj.sca = { 15.f,15.f,15.f };	
+		}				
 	}
 
 	
@@ -124,15 +145,14 @@ void Level::LightUpdate(float _dt)
 	//	parser.lights[i].obj.sca = { 5.f,5.f,5.f };
 	//}
 
+	
 
-
-
-	int idx = 0;
+	/*int idx = 0;
 	for (int i = 7; i < allObjects.size(); i++)
 	{
 		allObjects[i]->transf = light[idx].obj;		
 		idx++;
-	}
+	}*/
 }
 
 int Level::GetType(std::string _str)
@@ -271,11 +291,15 @@ void Level::Render(Model* obj)
 
 	//Send view matrix to the shader
 	shader->setUniform("model", cam.ProjMat * cam.ViewMat * m2w);	
+	
+	glBindTextureUnit(0, obj->textureID);
 
-	shader->setUniform("uNormalMap", 1);
-	//glActiveTexture(GL_TEXTURE111);
+	glBindTextureUnit(4, obj->m_iNormalID);
+	
 
-	shader->setUniform("myTextureSampler", 0);	
+	shader->setUniform("myTextureSampler", 0);
+	shader->setUniform("uNormalMap", 4);
+
 	shader->setUniform("hasTexture", b_tex);
 	shader->setUniform("normal", b_normal);		
 	
@@ -289,6 +313,7 @@ void Level::Render(Model* obj)
 	}
 
 	std::vector<CS300Parser::Light> all_lights=parser.lights;
+	int MyLightsize=MyAllLights.size();
 	int light_size = all_lights.size();	
 	shader->setUniform("uLightNum", light_size);	
 
@@ -296,22 +321,14 @@ void Level::Render(Model* obj)
 	glm::vec3 campos = (Level::GetPtr()->cam.camPos);
 	shader->setUniform("uCameraPos", campos);
 	shader->setUniform("modeltoworld", m2w);	
+		
 
-	for (int i = 0; i < light_size; i++)
+	for (int i = 0; i < MyLightsize; i++)
 	{		
 		shader->setUniform("uLight[" + std::to_string(i) + "].type", GetType(all_lights[i].type));
 		shader->setUniform("uLight[" + std::to_string(i) + "].col", all_lights[i].col);
-		for (int j = 0; j < allObjects.size(); j++)
-		{
-			if (j == 7&&i==0)//せせせせせせせ
-			{
-				all_lights[i].pos = allObjects[j]->transf.pos;				
-				int a = 0;
-			}	
-			
-		}
+		parser.lights[i].pos = MyAllLights[i]->m->transf.pos;
 				
-
 		shader->setUniform("uLight[" + std::to_string(i) + "].positionWorld", all_lights[i].pos);
 		shader->setUniform("uLight[" + std::to_string(i) + "].amb", all_lights[i].amb);
 		shader->setUniform("uLight[" + std::to_string(i) + "].att", all_lights[i].att);
@@ -326,7 +343,7 @@ void Level::Render(Model* obj)
 	shader->setUniform("mp_ambient",  mp.ambient);
 	shader->setUniform("mp_diffuse",  mp.diffuse);
 	shader->setUniform("mp_specular", mp.specular);
-	shader->setUniform("mp_shininess",mp.shininess);
+	shader->setUniform("mp_shininess", obj->transf.ns);
 
 
 	//draw
@@ -342,6 +359,8 @@ void Level::Render(Model* obj)
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D,0);
+
 }
 
 

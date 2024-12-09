@@ -6,7 +6,6 @@ uniform sampler2D myTextureSampler;
 uniform bool hasTexture;
 uniform bool normal;
 uniform bool LightColorOn;
-in vec3 Normal;
 
 uniform sampler2D uNormalMap;
 
@@ -46,41 +45,51 @@ in vec3 fragWorldPos;
 
 in mat3 tbnMat;//tanget space로 가는 행렬
 
+uniform mat4 modeltoworld;
+
+in vec3 temp;
+
 void main()
-{   	 	
-	vec3 Phong=vec3(0.0f,0.0f,0.0f);
-	vec3 normalMap_norm=normalize(2.0*texture(uNormalMap,fragTexCoord).xyz-1.0);
+{   	 					
+	vec3 Phong=vec3(0.0f,0.0f,0.0f);	
+	//tangent space
+	vec3 normalMap_norm = normalize(2.0*texture(uNormalMap,fragTexCoord).xyz-1.0);
+		
+	//tangent space -> model space
+	normalMap_norm = tbnMat * normalMap_norm;
+
+	//model space->world space
+	normalMap_norm = normalize(modeltoworld * vec4(normalMap_norm,0.f)).xyz;
+
 	for(int i=0;i<uLightNum;i++)
 	{
-		vec3 N=(fragNormal);   // 법선 벡터
-		vec3 L=normalize(vec3(uLight[i].positionWorld) - fragWorldPos);//표면에서 광원으로 향하는 벡터
-		vec3 light_Direction=L;
-		vec3 V=(uCameraPos - fragWorldPos);//표면에서 카메라로 향하는 벡터
-		vec3 R = normalize(reflect(-L, N)); //reflector 아마 specular에서 쓰일듯		
+		vec3 L=normalize(vec3(uLight[i].positionWorld) - fragWorldPos);//표면에서 광원으로 향하는 벡터		
 
-		float NdotL = dot(N, L);														
-								
-		vec3 v_lightTS=tbnMat*light_Direction;
-		vec3 v_viewTS=(tbnMat*V);
-		vec3 light =normalize(v_lightTS);
-		vec3 view=normalize(v_viewTS);
+		//light is worldspace
+		vec3 light_Direction=L;
+
+
+		vec3 view=normalize((uCameraPos - fragWorldPos));//표면에서 카메라로 향하는 벡터																	
 
 
 		//Att | Ambient
-		float dist=length(vec3(uLight[i].positionWorld)-fragWorldPos);
-		float att=min(1.0f/(uLight[i].att.x+(uLight[i].att.y*dist)+(uLight[i].att.z*dist*dist)),1.0f);		
-		vec3 Ambient  =mp_ambient* uLight[i].col * uLight[i].amb  *    vec3(UV,0);
+		float dist    = length(uLight[i].positionWorld-fragWorldPos);
+		float att     = min(1.0f/(uLight[i].att.x+(uLight[i].att.y*dist)+(uLight[i].att.z*dist*dist)),1.0f);		
+		vec3 Ambient  = mp_ambient* uLight[i].col * uLight[i].amb  * texture(myTextureSampler,UV).rgb;
 
 		//Diffuse
-		float diff=max(dot(normalMap_norm,light),0.0);
-		vec3 Diffuse  = uLight[i].col     *    vec3(UV,0)  *     diff;
+		float diff=max(dot(normalMap_norm,light_Direction),0.0);
+		vec3 Diffuse  = uLight[i].col     *    texture(myTextureSampler,UV).rgb  *     diff;
 
 
 		//Specular
-		vec3 reflection=2.0f *dot(normalMap_norm, light)*normalMap_norm - light;
-		float sp = pow(max(dot(reflection, view), 0.0), mp_shininess);
-		vec3 Specular=uLight[i].col*sp;								
+		vec3 reflection=2.0 *dot(normalMap_norm, light_Direction)*normalMap_norm - light_Direction;
+		float sp = pow(max(dot(reflection, view), 0.0), mp_shininess);		
+		vec3 Specular=mp_specular*sp;
+		
 
+
+		//Specular = vec3(0,0,0);
 
 		if(uLight[i].type==3)//SPOT
 		{
@@ -96,23 +105,48 @@ void main()
 
 			SpotLightEffect=clamp(SpotLightEffect,0,1);
 			
-			Phong += att*(SpotLightEffect*(Diffuse + Specular));
-			FragColor = vec4(UV,0, 1.0);
+			Phong += att*(SpotLightEffect*(Diffuse + Specular));			
+			FragColor=texture(uNormalMap,UV);
 			return;
 		}
 		else if(uLight[i].type==2)// DIR
 		{
-			att=1.f;			
-			Phong += att*(Diffuse + Specular);
-			FragColor = vec4(UV,0, 1.0);
+			att=1.f;
+			Phong += att*(Diffuse + Specular);		
+			FragColor=texture(uNormalMap,UV);
 			return;
 		}
 		else //POINT
 		{
-			Phong += att*(Ambient+Diffuse + Specular);									
-			FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);			
-		}						
+			
+
+			Phong += Ambient + att*(Diffuse+ Specular);																			
+		}		
+		
 	}		
+	
+
+	if(LightColorOn)
+	{
+		FragColor=vec4(1.0,1.0,1.0,1.0);			
+	}
+	else
+	{
+		if(hasTexture)		
+			FragColor=texture(myTextureSampler, UV) * vec4(Phong,1.0f);
+		else
+		{
+			//FragColor = vec4(UV,0, 1.0)*vec4(Phong,1.0f);
+			FragColor = vec4(Phong,1.0f);
+		}
+			
+	}
+
+
+
+
+		
+
 
 
 	//if(hasTexture)		
@@ -141,4 +175,13 @@ void main()
 	//	}
 	//	
 	//}	
+
+
+	//DEBUG
+	//FragColor = texture(myTextureSampler,UV);
+	//FragColor = texture(uNormalMap,UV);
+	//FragColor = vec4((normalMap_norm + vec3(1,1,1))/2,1);
+	//FragColor = vec4((fragNormal + vec3(1,1,1))/2,1);
+	//FragColor = vec4((temp + vec3(1,1,1))/2,1);
+	//FragColor = vec4(mp_shininess/10,0,0,1);
 }

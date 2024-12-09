@@ -14,6 +14,7 @@ out vec3 fragNormal;
 out vec2 fragTexCoord;
 out mat3 tbnMat;
 out vec2 UV;
+out vec3 temp;
 
 void main()
 {
@@ -22,9 +23,14 @@ void main()
     fragNormal = normalize((modeltoworld * vec4(vNormals, 0.0)).xyz); // World Space 법선
     fragTexCoord = vTextCoords;
     UV=fragTexCoord;
-    // Tangent Space 변환 행렬
-    vec3 Nor = normalize(transpose(inverse(mat3(modeltoworld))) * vNormals);
-    vec3 Tan = normalize(transpose(inverse(mat3(modeltoworld))) * tangent);
-    vec3 Bin = normalize(cross(Nor, Tan));
-    tbnMat = transpose(mat3(Tan, Bin, Nor));
+
+    mat4 worldtomodel=inverse(modeltoworld);
+
+    // Tangent Space 변환 행렬        
+    vec3 Tan= normalize(tangent);    
+    vec3 Bin = normalize(bitangent);   
+    vec3 Nor =  normalize(cross(Tan,Bin));
+
+    //goto object space matrix from tangents
+    tbnMat = transpose(mat3(Tan, Bin, Nor));//columm major
 }

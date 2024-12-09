@@ -72,7 +72,7 @@ translate -40 0 50
 color 1 1 1
 lightType POINT	
 attenuation 0 0.0 0.0005
-orbit 0 0 50
-sinusoidal 0 1.5 40
+#orbit 0 0 50
+#sinusoidal 0 1.5 40
 ambient 0.2
-mesh CUBE   
+mesh CUBE

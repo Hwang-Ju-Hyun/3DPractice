@@ -6,6 +6,7 @@
 class GLFWwindow;
 class Model;
 class CS300Parser;
+class Light;
 
 #include <vector>
 #include "program.h"
@@ -42,6 +43,8 @@ private:
 	GLFWwindow* window;
 
 	std::vector<Model*> allObjects;
+	//TODO: I must fix it
+	std::vector<Light*> MyAllLights;
 
 	CS300Parser parser;
 

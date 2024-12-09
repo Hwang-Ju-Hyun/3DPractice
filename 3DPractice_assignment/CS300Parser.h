@@ -68,7 +68,7 @@ class CS300Parser
         glm::vec3 ambient = {1.f,1.f,1.f  };//coefficient ambient
         glm::vec3 diffuse = { 1.f,1.f,1.f,};//텍스쳐 칼라
         glm::vec3 specular = { 1.f,1.f,1.f };//coefficient  specular
-        float shininess = 1.f; //ns in specular
+        float shininess = 10.f; //ns in specular
     };
   private:
     static float     ReadFloat(std::ifstream & f);

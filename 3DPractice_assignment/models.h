@@ -59,5 +59,17 @@ public:
 	void MyLoadTexture();
 	unsigned char* m_cData = nullptr;
 	unsigned int m_iTextureID=0;
+	unsigned int m_iNormalID=0;
 	float t = 0;
+
+
+
+};
+
+struct Light
+{
+	Model* m;
+
+	Light(CS300Parser::Light transf);
+	~Light();
 };
