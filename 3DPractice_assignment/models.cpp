@@ -891,7 +891,7 @@ Light::Light(CS300Parser::Light transf)
 	for (int i = 0; i < transf.anims.size(); i++)
 		m->transf.anims.push_back(transf.anims[i]);
 	m->transf.pos = transf.pos;
-	m->transf.StartPos = transf.startPos;
+	m->transf.StartPos = transf.startPos;	
 }
 
 Light::~Light()
